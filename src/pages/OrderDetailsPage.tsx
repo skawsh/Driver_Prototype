@@ -29,8 +29,8 @@ const OrderDetailsPage = () => {
   };
   
   const handleBack = () => {
-    // Navigate back to the task success page
-    navigate(`/task-success/${taskId}/${orderId}`);
+    // Navigate back to the previous page
+    navigate(-1);
   };
   
   const handleEditItem = (sectionId: string, itemId: number) => {
