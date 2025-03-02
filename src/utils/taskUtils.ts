@@ -21,16 +21,28 @@ export const getActiveSubtasks = (tasks: Task[], driverState: DriverState) => {
 };
 
 export const markClosestSubtask = (subtasks: SubTask[], snoozedTasks: string[], snoozedUntilLast: boolean, tasks: Task[]) => {
+  // Get the snoozed task ID if using "snooze until last" option
+  let snoozedTaskId = '';
+  if (snoozedUntilLast) {
+    const snoozeInfoStr = localStorage.getItem('snoozeInfo');
+    if (snoozeInfoStr) {
+      const snoozeInfo = JSON.parse(snoozeInfoStr);
+      if (snoozeInfo.snoozeType === 'last') {
+        snoozedTaskId = snoozeInfo.taskId;
+      }
+    }
+  }
+  
   // Identify which subtasks are snoozed
   const snoozedSubtasks = subtasks.filter(subtask => 
     snoozedTasks.includes(subtask.id) || 
-    (snoozedUntilLast && isPartOfTaskBeforeLast(subtask.id, tasks))
+    (snoozedUntilLast && subtask.id === snoozedTaskId)
   );
   
   // Get active subtasks that are not snoozed
   const activeNonSnoozedSubtasks = subtasks.filter(subtask => 
     !snoozedTasks.includes(subtask.id) && 
-    !(snoozedUntilLast && isPartOfTaskBeforeLast(subtask.id, tasks))
+    !(snoozedUntilLast && subtask.id === snoozedTaskId)
   );
   
   // Find the closest non-snoozed subtask
@@ -39,7 +51,7 @@ export const markClosestSubtask = (subtasks: SubTask[], snoozedTasks: string[], 
   // Mark all subtasks accordingly
   return subtasks.map(subtask => {
     const isSnoozed = snoozedTasks.includes(subtask.id) || 
-                     (snoozedUntilLast && isPartOfTaskBeforeLast(subtask.id, tasks));
+                     (snoozedUntilLast && subtask.id === snoozedTaskId);
     
     return {
       ...subtask,
