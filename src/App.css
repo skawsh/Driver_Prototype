@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -53,3 +54,9 @@
 .page-transition {
   transition: padding 0.3s ease-in-out;
 }
+
+/* Task type colors */
+.pickup-card { border-left: 4px solid #3b82f6; /* blue-500 */ }
+.drop-card { border-left: 4px solid #6366f1; /* indigo-500 */ }
+.collect-card { border-left: 4px solid #22c55e; /* green-500 */ }
+.delivery-card { border-left: 4px solid #eab308; /* yellow-500 */ }

@@ -7,7 +7,7 @@ export interface Location {
 
 export interface SubTask {
   id: string;
-  type: 'pickup' | 'delivery';
+  type: 'pickup' | 'drop' | 'collect' | 'delivery';
   status: 'pending' | 'completed';
   enabled: boolean;
   location: Location;
@@ -19,10 +19,7 @@ export interface Task {
   id: string;
   orderNumber: string;
   items: number;
-  subtasks: {
-    pickup: SubTask;
-    delivery: SubTask;
-  };
+  subtasks: SubTask[];
   status: 'pending' | 'in-progress' | 'completed';
 }
 

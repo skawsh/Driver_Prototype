@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,14 +18,21 @@ const initialDriverState: DriverState = {
   }
 };
 
+// Studio location (for drop and collect tasks)
+const studioLocation: Location = {
+  latitude: 17.4100,
+  longitude: 78.5000,
+  address: "Laundry Studio, HITEC City, Hyderabad, Telangana 500081"
+};
+
 // Initial task data
 const initialTasks: Task[] = [
   {
     id: "task1",
     orderNumber: "1234",
     items: 3,
-    subtasks: {
-      pickup: {
+    subtasks: [
+      {
         id: "task1-pickup",
         type: "pickup",
         status: "pending",
@@ -38,27 +44,23 @@ const initialTasks: Task[] = [
           address: "123 Jubilee Hills, Hyderabad, Telangana 500033"
         }
       },
-      delivery: {
-        id: "task1-delivery",
-        type: "delivery",
+      {
+        id: "task1-drop",
+        type: "drop",
         status: "pending",
         enabled: false,
         customerName: "Raj Sharma",
-        location: {
-          latitude: 17.4200,
-          longitude: 78.4500,
-          address: "321 Banjara Hills, Hyderabad, Telangana 500034"
-        }
+        location: studioLocation
       }
-    },
+    ],
     status: "pending"
   },
   {
     id: "task2",
     orderNumber: "5678",
     items: 2,
-    subtasks: {
-      pickup: {
+    subtasks: [
+      {
         id: "task2-pickup",
         type: "pickup",
         status: "pending",
@@ -70,39 +72,31 @@ const initialTasks: Task[] = [
           address: "456 Banjara Hills, Hyderabad, Telangana 500034"
         }
       },
-      delivery: {
-        id: "task2-delivery",
-        type: "delivery",
+      {
+        id: "task2-drop",
+        type: "drop",
         status: "pending",
         enabled: false,
         customerName: "Priya Patel",
-        location: {
-          latitude: 17.4150,
-          longitude: 78.4350,
-          address: "654 Film Nagar, Hyderabad, Telangana 500034"
-        }
+        location: studioLocation
       }
-    },
+    ],
     status: "pending"
   },
   {
     id: "task3",
     orderNumber: "9012",
     items: 1,
-    subtasks: {
-      pickup: {
-        id: "task3-pickup",
-        type: "pickup",
+    subtasks: [
+      {
+        id: "task3-collect",
+        type: "collect",
         status: "pending",
         enabled: true,
         customerName: "Arjun Reddy",
-        location: {
-          latitude: 17.4300,
-          longitude: 78.4500,
-          address: "789 Gachibowli, Hyderabad, Telangana 500032"
-        }
+        location: studioLocation
       },
-      delivery: {
+      {
         id: "task3-delivery",
         type: "delivery",
         status: "pending",
@@ -114,27 +108,23 @@ const initialTasks: Task[] = [
           address: "987 Kondapur, Hyderabad, Telangana 500032"
         }
       }
-    },
+    ],
     status: "pending"
   },
   {
     id: "task4",
     orderNumber: "3456",
     items: 4,
-    subtasks: {
-      pickup: {
-        id: "task4-pickup",
-        type: "pickup",
+    subtasks: [
+      {
+        id: "task4-collect",
+        type: "collect",
         status: "pending",
         enabled: true,
         customerName: "Lakshmi Devi",
-        location: {
-          latitude: 17.4450,
-          longitude: 78.5000,
-          address: "234 Madhapur, HITEC City, Hyderabad, Telangana 500081"
-        }
+        location: studioLocation
       },
-      delivery: {
+      {
         id: "task4-delivery",
         type: "delivery",
         status: "pending",
@@ -146,15 +136,15 @@ const initialTasks: Task[] = [
           address: "432 Whitefield, HITEC City, Hyderabad, Telangana 500081"
         }
       }
-    },
+    ],
     status: "pending"
   },
   {
     id: "task5",
     orderNumber: "7890",
     items: 2,
-    subtasks: {
-      pickup: {
+    subtasks: [
+      {
         id: "task5-pickup",
         type: "pickup",
         status: "pending",
@@ -166,19 +156,15 @@ const initialTasks: Task[] = [
           address: "567 Kukatpally, Hyderabad, Telangana 500072"
         }
       },
-      delivery: {
-        id: "task5-delivery",
-        type: "delivery",
+      {
+        id: "task5-drop",
+        type: "drop",
         status: "pending",
         enabled: false,
         customerName: "Vikram Singh",
-        location: {
-          latitude: 17.4400,
-          longitude: 78.4700,
-          address: "765 KPHB, Hyderabad, Telangana 500072"
-        }
+        location: studioLocation
       }
-    },
+    ],
     status: "pending"
   }
 ];
@@ -193,19 +179,14 @@ const Index = () => {
     const activeSubtasks: SubTask[] = [];
     
     tasks.forEach(task => {
-      if (task.subtasks.pickup.enabled && task.subtasks.pickup.status !== 'completed') {
-        activeSubtasks.push({
-          ...task.subtasks.pickup,
-          distance: calculateDistance(driverState.currentLocation, task.subtasks.pickup.location)
-        });
-      }
-      
-      if (task.subtasks.delivery.enabled && task.subtasks.delivery.status !== 'completed') {
-        activeSubtasks.push({
-          ...task.subtasks.delivery,
-          distance: calculateDistance(driverState.currentLocation, task.subtasks.delivery.location)
-        });
-      }
+      task.subtasks.forEach(subtask => {
+        if (subtask.enabled && subtask.status !== 'completed') {
+          activeSubtasks.push({
+            ...subtask,
+            distance: calculateDistance(driverState.currentLocation, subtask.location)
+          });
+        }
+      });
     });
     
     return sortSubtasksByDistance(activeSubtasks, driverState.currentLocation);
@@ -220,28 +201,28 @@ const Index = () => {
     let taskCompleted = false;
     let newLocation: Location | null = null;
     
-    // Find and update the completed subtask
+    // Loop through tasks to find the subtask
     for (let i = 0; i < updatedTasks.length; i++) {
       const task = updatedTasks[i];
+      const subtaskIndex = task.subtasks.findIndex(st => st.id === subtaskId);
       
-      // Check if this is the pickup subtask
-      if (task.subtasks.pickup.id === subtaskId) {
-        task.subtasks.pickup.status = 'completed';
-        task.subtasks.delivery.enabled = true;
-        task.status = 'in-progress';
-        newLocation = task.subtasks.pickup.location;
-        break;
-      }
-      
-      // Check if this is the delivery subtask
-      if (task.subtasks.delivery.id === subtaskId) {
-        task.subtasks.delivery.status = 'completed';
-        task.status = 'completed';
-        taskCompleted = true;
-        newLocation = task.subtasks.delivery.location;
+      if (subtaskIndex !== -1) {
+        // Mark this subtask as completed
+        task.subtasks[subtaskIndex].status = 'completed';
+        newLocation = task.subtasks[subtaskIndex].location;
         
-        // Add to completed tasks
-        setCompletedTasks(prev => [...prev, task]);
+        // If this is not the last subtask, enable the next one
+        if (subtaskIndex < task.subtasks.length - 1) {
+          task.subtasks[subtaskIndex + 1].enabled = true;
+          task.status = 'in-progress';
+        } else {
+          // This was the last subtask, mark the task as completed
+          task.status = 'completed';
+          taskCompleted = true;
+          
+          // Add to completed tasks
+          setCompletedTasks(prev => [...prev, task]);
+        }
         break;
       }
     }
@@ -266,6 +247,54 @@ const Index = () => {
     toast.success(`Subtask completed successfully!`, {
       description: `New location: ${newLocation?.address}`,
     });
+  };
+  
+  // Get button color based on subtask type
+  const getSubtaskColor = (type: string) => {
+    switch (type) {
+      case 'pickup':
+        return 'bg-blue-500';
+      case 'drop':
+        return 'bg-indigo-500';
+      case 'collect':
+        return 'bg-green-500';
+      case 'delivery':
+        return 'bg-yellow-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+  
+  // Get badge variant based on subtask type
+  const getSubtaskBadgeVariant = (type: string): "default" | "secondary" | "outline" | "destructive" => {
+    switch (type) {
+      case 'pickup':
+        return 'secondary';
+      case 'drop':
+        return 'outline';
+      case 'collect':
+        return 'default';
+      case 'delivery':
+        return 'destructive';
+      default:
+        return 'default';
+    }
+  };
+  
+  // Get friendly name for subtask type
+  const getSubtaskTypeName = (type: string) => {
+    switch (type) {
+      case 'pickup':
+        return 'Pick Up';
+      case 'drop':
+        return 'Drop';
+      case 'collect':
+        return 'Collect';
+      case 'delivery':
+        return 'Deliver';
+      default:
+        return type;
+    }
   };
   
   return (
@@ -302,7 +331,7 @@ const Index = () => {
           {activeSubtasks.map((subtask, index) => {
             // Find the parent task for this subtask
             const parentTask = tasks.find(
-              task => task.subtasks.pickup.id === subtask.id || task.subtasks.delivery.id === subtask.id
+              task => task.subtasks.some(st => st.id === subtask.id)
             );
             
             if (!parentTask) return null;
@@ -315,12 +344,7 @@ const Index = () => {
                 transition={{ duration: 0.3, delay: index * 0.1 }}
               >
                 <Card className="task-card-hover relative overflow-hidden">
-                  {subtask.type === 'pickup' && (
-                    <div className="absolute top-0 left-0 w-1 h-full bg-blue-500" />
-                  )}
-                  {subtask.type === 'delivery' && (
-                    <div className="absolute top-0 left-0 w-1 h-full bg-green-500" />
-                  )}
+                  <div className={`absolute top-0 left-0 w-1 h-full ${getSubtaskColor(subtask.type)}`} />
                   
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
@@ -329,11 +353,11 @@ const Index = () => {
                           Order #{parentTask.orderNumber}
                         </CardTitle>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Task {subtask.type === 'pickup' ? 'Pickup' : 'Delivery'}
+                          Task {getSubtaskTypeName(subtask.type)}
                         </p>
                       </div>
-                      <Badge variant={subtask.type === 'pickup' ? 'secondary' : 'default'}>
-                        {subtask.type === 'pickup' ? 'Pick Up' : 'Deliver'}
+                      <Badge variant={getSubtaskBadgeVariant(subtask.type)}>
+                        {getSubtaskTypeName(subtask.type)}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -370,7 +394,7 @@ const Index = () => {
                         className="w-full mt-2" 
                         onClick={() => completeSubtask(subtask.id)}
                       >
-                        Complete {subtask.type === 'pickup' ? 'Pickup' : 'Delivery'}
+                        Start {getSubtaskTypeName(subtask.type)}
                       </Button>
                     </div>
                   </CardContent>
@@ -405,18 +429,16 @@ const Index = () => {
                     <div className="space-y-3">
                       <div className="flex items-center space-x-2">
                         <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="flex-1">{task.subtasks.delivery.customerName}</span>
+                        <span className="flex-1">{task.subtasks[task.subtasks.length - 1].customerName}</span>
                       </div>
                       
                       <div className="flex flex-col space-y-2 pt-1">
-                        <div className="flex items-center space-x-2">
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                          <span className="text-sm">Pickup completed</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                          <span className="text-sm">Delivery completed</span>
-                        </div>
+                        {task.subtasks.map((subtask, subIndex) => (
+                          <div className="flex items-center space-x-2" key={subIndex}>
+                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            <span className="text-sm">{getSubtaskTypeName(subtask.type)} completed</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </CardContent>
