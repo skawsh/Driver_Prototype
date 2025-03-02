@@ -68,15 +68,15 @@ const ReportIssuePage = () => {
       const selectedOption = issueOptions.find(option => option.value === selectedIssue);
       
       toast.success('Issue reported successfully', {
-        description: `We've notified the support team about this issue.`,
+        description: `The order has been rescheduled and will appear in the admin panel.`,
         duration: 5000,
       });
       
       setIsSubmitting(false);
       
-      // Navigate back to task details
+      // Navigate back to home screen instead of task details
       setTimeout(() => {
-        navigate(`/task/${taskId}/${orderId}`);
+        navigate('/'); // Navigate to home page instead of back to task
       }, 1500);
     }, 1000);
   };
