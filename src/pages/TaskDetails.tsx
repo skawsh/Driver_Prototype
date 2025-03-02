@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Scale, Plus, Trash2 } from 'lucide-react';
@@ -25,7 +24,6 @@ const TaskDetails = () => {
   const [newItemName, setNewItemName] = useState<string>('');
   const [newItemQuantity, setNewItemQuantity] = useState<string>('1');
   
-  // Sample data for demonstration
   const estimatedWeight = 2.5;
   const [washAndFoldItems, setWashAndFoldItems] = useState<ClothingItem[]>([
     { name: 'Shirt', quantity: 1 },
@@ -40,10 +38,8 @@ const TaskDetails = () => {
     { name: 'Jacket', quantity: 1 }
   ]);
 
-  // Simulate loading task details when component mounts
   useEffect(() => {
     console.log(`Loading task details for taskId: ${taskId}, orderId: ${orderId}`);
-    // Here you would typically fetch the task details from an API
   }, [taskId, orderId]);
   
   const handleGoBack = () => {
@@ -79,7 +75,6 @@ const TaskDetails = () => {
     const quantity = parseInt(newItemQuantity) || 1;
     
     if (editingItem) {
-      // Editing existing item
       setWashAndFoldItems(prev => 
         prev.map(item => 
           item === editingItem ? { name: newItemName, quantity } : item
@@ -87,7 +82,6 @@ const TaskDetails = () => {
       );
       toast.success("Item updated successfully");
     } else {
-      // Adding new item
       const newItem = { name: newItemName, quantity };
       setWashAndFoldItems(prev => [...prev, newItem]);
       toast.success("New item added successfully");
@@ -127,7 +121,6 @@ const TaskDetails = () => {
   
   return (
     <div className="bg-blue-100 min-h-screen p-4 flex flex-col">
-      {/* Header with back button and order ID */}
       <div className="flex items-center mb-4">
         <Button 
           variant="ghost" 
@@ -139,7 +132,6 @@ const TaskDetails = () => {
         <div className="text-lg font-bold">ID {orderId || '123456'}P</div>
       </div>
       
-      {/* Main content */}
       <div className="bg-white rounded-lg p-4 flex-1 shadow-md">
         <div className="flex items-center justify-center mb-2">
           <Scale className="h-5 w-5 mr-2" />
@@ -207,11 +199,10 @@ const TaskDetails = () => {
         </ul>
         
         <div className="mt-2 text-sm text-gray-500 text-center italic">
-          Dry cleaning items can only be modified by admins
+          Other clothing items can only be modified by user
         </div>
       </div>
       
-      {/* Footer with buttons */}
       <div className="mt-4 flex justify-center gap-4">
         <Button 
           className="bg-green-300 text-black font-semibold rounded-md px-8 py-2 hover:bg-green-400"
@@ -228,7 +219,6 @@ const TaskDetails = () => {
         </Button>
       </div>
 
-      {/* Add/Edit Item Sheet */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent>
           <SheetHeader>
