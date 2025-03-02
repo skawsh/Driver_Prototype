@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -187,6 +186,7 @@ const initialTasks: Task[] = [
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [driverState, setDriverState] = useState<DriverState>(initialDriverState);
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
@@ -363,9 +363,17 @@ const Index = () => {
   };
   
   const viewDetails = (task: SubTask) => {
-    toast.info(`Viewing details for task ${task.id}`, {
-      description: "Full details would be shown in a modal in a real app",
-    });
+    const parentTask = tasks.find(
+      t => t.subtasks.some(st => st.id === task.id)
+    );
+    
+    if (parentTask) {
+      navigate(`/task/${task.id}/${parentTask.orderNumber}`);
+    } else {
+      toast.info(`Viewing details for task ${task.id}`, {
+        description: "Full details would be shown in a modal in a real app",
+      });
+    }
   };
   
   const renderLocationReachedTask = () => {
@@ -765,13 +773,24 @@ const Index = () => {
                         </div>
                       </div>
                       
-                      <Button 
-                        className="w-full mt-2" 
-                        onClick={() => startTask(subtask)}
-                        disabled={!isClosest}
-                      >
-                        {isClosest ? `Start ${getSubtaskTypeName(subtask.type)}` : 'Not Next Task'}
-                      </Button>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Button 
+                          variant="outline"
+                          onClick={() => viewDetails(subtask)}
+                          className="w-full"
+                        >
+                          View Details
+                        </Button>
+                        
+                        <Button 
+                          className="w-full" 
+                          onClick={() => startTask(subtask)}
+                          disabled={!isClosest}
+                        >
+                          {isClosest ? `Start ${getSubtaskTypeName(subtask.type)}` : 'Not Next Task'}
+                        </Button>
+                      </div>
+                      
                       {!isClosest && (
                         <p className="text-xs text-center mt-1 text-gray-500">Complete the closest task first</p>
                       )}
