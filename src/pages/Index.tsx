@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Package, User, CheckCircle, Circle } from 'lucide-react';
+import { CheckCircle, Clock, MapPin, Package, User } from 'lucide-react';
 import { Task, SubTask, Location, DriverState } from '@/types/task';
 import { calculateDistance, sortSubtasksByDistance } from '@/utils/distance';
 import { toast } from 'sonner';
@@ -274,15 +273,7 @@ const Index = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <h1 className="text-2xl font-bold mb-1">Driver Workflow</h1>
-        <p className="text-muted-foreground mb-2">Your current tasks sorted by distance</p>
-        
-        <div className="bg-muted/30 p-3 rounded-lg mb-6">
-          <div className="flex items-center space-x-2">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Current location: {driverState.currentLocation.address}</span>
-          </div>
-        </div>
+        <h1 className="text-2xl font-bold mb-6">Assigned Orders</h1>
       </motion.div>
       
       {activeSubtasks.length === 0 ? (
