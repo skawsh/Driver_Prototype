@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Phone, AlertCircle, Clock, WashingMachine, Route } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, AlertCircle, Clock, WashingMachine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -76,13 +75,12 @@ const TaskDetails = () => {
   };
 
   const locationReached = () => {
-    // No toast, just navigate directly
-    navigate(`/task-success/${taskId}/${orderId}`);
-  };
-
-  const viewDetails = () => {
-    if (!task) return;
-    navigate(`/order-details/${taskId}/${orderId}`);
+    toast.success("Location reached!", {
+      description: "Task marked as complete.",
+    });
+    setTimeout(() => {
+      navigate(`/task-success/${taskId}/${orderId}`);
+    }, 1500);
   };
 
   if (loading) {
@@ -119,27 +117,28 @@ const TaskDetails = () => {
       </div>
       
       <Card className="overflow-hidden rounded-3xl border-2 border-primary shadow-lg max-w-md mx-auto">
-        <div className="p-4">
-          <div className="flex justify-between items-start mb-4">
-            <div className="text-lg font-semibold">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-xl font-bold">
               ID {orderId}P
             </div>
-            <div className="flex items-center text-sky-400 font-medium">
-              <Route className="h-4 w-4 mr-1" />
-              <span>{task.distance} Km</span>
+            <div className="flex items-center">
+              <MapPin className="h-4 w-4 text-blue-500 mr-1" />
+              <span className="text-blue-500 font-medium">{task.distance} Km</span>
+              <Clock className="h-5 w-5 text-gray-400 ml-3" />
             </div>
           </div>
           
-          <div className="flex items-center mb-4">
-            <WashingMachine className="h-5 w-5 mr-2" />
-            <span className="text-xl font-bold">{task.customerName}</span>
+          <div className="flex items-center mb-5">
+            <WashingMachine className="h-6 w-6 mr-2" />
+            <span className="text-2xl font-bold">{task.customerName}</span>
           </div>
           
           <a 
             href={`https://maps.google.com/?q=${task.location.latitude},${task.location.longitude}`} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="flex items-start space-x-2 mb-3 text-blue-500 hover:underline"
+            className="flex items-start space-x-2 mb-4 text-blue-500 hover:underline"
           >
             <MapPin className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
             <span className="break-all">{task.location.address}</span>
@@ -147,36 +146,27 @@ const TaskDetails = () => {
           
           <a 
             href={`tel:${task.mobileNumber}`}
-            className="flex items-start space-x-2 mb-4 text-blue-500 hover:underline"
+            className="flex items-start space-x-2 mb-6 text-blue-500 hover:underline"
           >
             <Phone className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
             <span>{task.mobileNumber}</span>
           </a>
           
-          <div className="grid grid-cols-2 gap-3 mt-4">
-            <Button 
-              variant="outline"
-              className="rounded-xl"
-              onClick={viewDetails}
-            >
-              View details
-            </Button>
-            
-            <Button 
-              variant="destructive"
-              className="rounded-xl"
-              onClick={reportIssue}
-            >
-              Report issue
-            </Button>
-            
-            <Button 
-              className="location-reached-button w-full h-12 text-lg font-semibold col-span-2"
-              onClick={locationReached}
-            >
-              Location reached
-            </Button>
-          </div>
+          <Button 
+            variant="destructive"
+            className="mb-4 w-full"
+            onClick={reportIssue}
+          >
+            <AlertCircle className="mr-2 h-4 w-4" />
+            Report issue
+          </Button>
+          
+          <Button 
+            className="w-full h-12 text-lg font-semibold bg-blue-500 hover:bg-blue-600 rounded-full"
+            onClick={locationReached}
+          >
+            Location reached
+          </Button>
         </div>
       </Card>
     </div>
