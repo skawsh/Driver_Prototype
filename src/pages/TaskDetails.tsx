@@ -85,9 +85,9 @@ const TaskDetails = () => {
     toast.success("Location reached!", {
       description: "Task marked as complete.",
     });
-    // In a real app, this would update the task status via an API
+    // Navigate to the success page instead of going home
     setTimeout(() => {
-      navigate('/');
+      navigate(`/task-success/${taskId}/${orderId}`);
     }, 1500);
   };
 
