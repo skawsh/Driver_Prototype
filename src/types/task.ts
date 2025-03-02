@@ -22,7 +22,7 @@ export interface Task {
   items: number;
   subtasks: SubTask[];
   status: 'pending' | 'in-progress' | 'completed';
-  washType: 'express' | 'standard' | 'both'; // Updated to be required
+  washType?: 'express' | 'standard' | 'both'; // Added washType field
 }
 
 export interface DriverState {
