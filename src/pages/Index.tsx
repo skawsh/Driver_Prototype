@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Clock, MapPin, Package, User, Phone, WashingMachine, Route } from 'lucide-react';
+import { CheckCircle, Clock, MapPin, Package, User, Phone, WashingMachine, Route, AlertCircle } from 'lucide-react';
 import { Task, SubTask, Location, DriverState } from '@/types/task';
 import { calculateDistance, sortSubtasksByDistance, getClosestSubtask } from '@/utils/distance';
 import { toast } from 'sonner';
@@ -189,6 +189,7 @@ const Index = () => {
   const [driverState, setDriverState] = useState<DriverState>(initialDriverState);
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [inProgressTask, setInProgressTask] = useState<SubTask | null>(null);
   
   const getActiveSubtasks = () => {
     const activeSubtasks: SubTask[] = [];
@@ -212,10 +213,28 @@ const Index = () => {
   const closestSubtask = getClosestSubtask(activeSubtasks);
   
   useEffect(() => {
-    if (closestSubtask && activeSubtasks.length > 0) {
+    if (closestSubtask && activeSubtasks.length > 0 && !inProgressTask) {
       setActiveTaskId(closestSubtask.id);
     }
-  }, [activeSubtasks.length]);
+  }, [activeSubtasks.length, inProgressTask]);
+  
+  const startTask = (subtask: SubTask) => {
+    setInProgressTask(subtask);
+    toast.success(`Started ${getSubtaskTypeName(subtask.type)} task!`);
+  }
+  
+  const reportIssue = () => {
+    toast.error("Issue reported to support team", {
+      description: "A support agent will contact you shortly",
+    });
+  }
+  
+  const locationReached = () => {
+    if (inProgressTask) {
+      completeSubtask(inProgressTask.id);
+      setInProgressTask(null);
+    }
+  }
   
   const completeSubtask = (subtaskId: string) => {
     const updatedTasks = [...tasks];
@@ -315,6 +334,85 @@ const Index = () => {
     return closestSubtask && closestSubtask.id === subtaskId;
   };
   
+  const renderInProgressTask = () => {
+    if (!inProgressTask) return null;
+    
+    const parentTask = tasks.find(
+      task => task.subtasks.some(st => st.id === inProgressTask.id)
+    );
+    
+    if (!parentTask) return null;
+    
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Card className="overflow-hidden rounded-3xl border-2 border-primary shadow-lg">
+          <CardContent className="p-0">
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <div className="text-lg font-semibold">
+                  ID {parentTask.orderNumber}P
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="flex items-center text-sky-400 font-medium">
+                    <Route className="h-4 w-4 mr-1" />
+                    {inProgressTask.distance !== undefined ? inProgressTask.distance : 0} Km
+                  </div>
+                  <Clock className="h-5 w-5 text-gray-400 ml-2" />
+                </div>
+              </div>
+              
+              <div className="flex items-center mb-4">
+                <WashingMachine className="h-5 w-5 mr-2" />
+                <span className="text-xl font-bold">{inProgressTask.customerName}</span>
+              </div>
+              
+              <a 
+                href={`https://maps.google.com/?q=${inProgressTask.location.latitude},${inProgressTask.location.longitude}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-start space-x-2 mb-3 text-blue-500 hover:underline"
+              >
+                <MapPin className="h-5 w-5 text-blue-500 mt-0.5" />
+                <span className="break-all">{inProgressTask.location.address}</span>
+              </a>
+              
+              {inProgressTask.mobileNumber && (
+                <a 
+                  href={`tel:${inProgressTask.mobileNumber}`}
+                  className="flex items-start space-x-2 mb-4 text-blue-500 hover:underline"
+                >
+                  <Phone className="h-5 w-5 text-blue-500 mt-0.5" />
+                  <span>{inProgressTask.mobileNumber.replace(/\+91 /, '')}</span>
+                </a>
+              )}
+              
+              <div className="grid grid-cols-1 gap-3 mt-4">
+                <Button 
+                  variant="destructive"
+                  className="rounded-xl"
+                  onClick={reportIssue}
+                >
+                  Report issue
+                </Button>
+                
+                <Button 
+                  className="location-reached-button w-full h-12 text-lg font-semibold"
+                  onClick={locationReached}
+                >
+                  Location reached
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  };
+  
   const renderCollectCard = (subtask: SubTask, parentTask: Task, index: number) => {
     const isClosest = isClosestSubtask(subtask.id);
     
@@ -355,7 +453,7 @@ const Index = () => {
               
               <Button 
                 className={`w-full h-12 text-lg font-semibold rounded-xl ${isClosest ? 'bg-green-500 hover:bg-green-600' : 'bg-green-400 hover:bg-green-500'} text-black`}
-                onClick={() => completeSubtask(subtask.id)}
+                onClick={() => startTask(subtask)}
                 disabled={!isClosest}
               >
                 {isClosest ? 'Start Collect' : 'Not Next Task'}
@@ -410,7 +508,7 @@ const Index = () => {
               
               <Button 
                 className={`w-full h-12 text-lg font-semibold rounded-xl ${isClosest ? 'bg-sky-500 hover:bg-sky-600' : 'bg-sky-400 hover:bg-sky-500'} text-white`}
-                onClick={() => completeSubtask(subtask.id)}
+                onClick={() => startTask(subtask)}
                 disabled={!isClosest}
               >
                 {isClosest ? 'Start Pickup' : 'Not Next Task'}
@@ -435,7 +533,9 @@ const Index = () => {
         <h1 className="text-2xl font-bold mb-6">Assigned Orders</h1>
       </motion.div>
       
-      {activeSubtasks.length === 0 ? (
+      {inProgressTask ? (
+        renderInProgressTask()
+      ) : activeSubtasks.length === 0 ? (
         <Card className="w-full p-8 text-center">
           <div className="flex flex-col items-center justify-center space-y-3">
             <CheckCircle className="h-12 w-12 text-primary/50" />
@@ -536,7 +636,7 @@ const Index = () => {
                       
                       <Button 
                         className="w-full mt-2" 
-                        onClick={() => completeSubtask(subtask.id)}
+                        onClick={() => startTask(subtask)}
                         disabled={!isClosest}
                       >
                         {isClosest ? `Start ${getSubtaskTypeName(subtask.type)}` : 'Not Next Task'}
