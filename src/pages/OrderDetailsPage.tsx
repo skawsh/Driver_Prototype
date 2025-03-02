@@ -1,19 +1,15 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Scale, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { toast } from 'sonner';
 
 const OrderDetailsPage = () => {
   const { taskId, orderId } = useParams<{ taskId: string; orderId: string }>();
   const navigate = useNavigate();
-  const [actualWeight, setActualWeight] = useState<string>("");
-  const [copied, setCopied] = useState(false);
   
   // Sample data - in a real app, this would come from an API
   const orderData = {
@@ -38,65 +34,50 @@ const OrderDetailsPage = () => {
   };
   
   const handleEditItem = (sectionId: string, itemId: number) => {
-    // Log the edit action
+    // For now, just log the edit action
     console.log(`Edit item ${itemId} in section ${sectionId}`);
-    toast.success(`Editing ${sectionId} item ${itemId}`);
   };
   
   const handleAddItem = () => {
-    // Log the add action
+    // For now, just log the add action
     console.log("Add new item");
-    toast.success("Adding new item");
-  };
-  
-  const handleCopyOrderId = () => {
-    navigator.clipboard.writeText(orderData.id)
-      .then(() => {
-        setCopied(true);
-        toast.success("Order ID copied to clipboard");
-        setTimeout(() => setCopied(false), 2000);
-      })
-      .catch(() => {
-        toast.error("Failed to copy order ID");
-      });
-  };
-  
-  const handleRequestSackEdit = () => {
-    toast.success("Sack edit requested");
-  };
-  
-  const handleSaveChanges = () => {
-    toast.success("Changes saved successfully");
-  };
-  
-  const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setActualWeight(e.target.value);
   };
   
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-lg mx-auto">
-        {/* Header with back button, order ID and copy button */}
-        <div className="bg-white rounded-xl p-4 mb-6 flex items-center justify-between">
-          <div className="flex items-center">
-            <Button variant="ghost" size="icon" onClick={handleBack} className="mr-2">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-xl font-semibold">ID {orderData.id}</h1>
-          </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleCopyOrderId} 
-            className="text-gray-500"
-          >
-            {copied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5" />}
+        {/* Header with back button */}
+        <div className="flex items-center mb-6">
+          <Button variant="ghost" size="icon" onClick={handleBack} className="mr-2">
+            <ArrowLeft className="h-5 w-5" />
           </Button>
+          <h1 className="text-xl font-semibold">ID {orderData.id}</h1>
         </div>
         
-        {/* Clothing items section - Wash & Fold First */}
+        {/* Weight details section */}
         <div className="bg-white rounded-xl p-6 mb-6">
-          <h3 className="font-semibold mb-4">Clothing items</h3>
+          <div className="flex items-center justify-center mb-4">
+            <Scale className="h-5 w-5 mr-2" />
+            <h2 className="text-lg font-medium">Weight details</h2>
+          </div>
+          
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-gray-700">Estimated weight</span>
+            <span className="font-medium">{orderData.estimatedWeight} Kg</span>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <span className="text-gray-700">Actual weight</span>
+            <div className="flex items-center">
+              <span className="text-gray-400 mr-1">——</span>
+              <span className="font-medium">Kg</span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Clothing items section */}
+        <div className="bg-white rounded-xl p-6 mb-6">
+          <h3 className="font-semibold mb-4">Add Clothing items</h3>
           
           {/* Wash & Fold section */}
           <div className="mb-6">
@@ -163,43 +144,12 @@ const OrderDetailsPage = () => {
           </p>
         </div>
         
-        {/* Weight details section */}
-        <div className="bg-white rounded-xl p-6 mb-6">
-          <div className="flex items-center justify-center mb-4">
-            <Scale className="h-5 w-5 mr-2" />
-            <h2 className="text-lg font-medium">Weight details</h2>
-          </div>
-          
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-gray-700">Estimated weight</span>
-            <span className="font-medium">{orderData.estimatedWeight} Kg</span>
-          </div>
-          
-          <div className="flex justify-between items-center">
-            <span className="text-gray-700">Actual weight</span>
-            <div className="flex items-center gap-2">
-              <Input 
-                type="number"
-                placeholder="Enter weight"
-                value={actualWeight}
-                onChange={handleWeightChange}
-                className="w-20 text-right"
-              />
-              <span className="font-medium">Kg</span>
-            </div>
-          </div>
-        </div>
-        
-        {/* Action buttons */}
+        {/* Action buttons - we're not implementing their functionality for now */}
         <div className="grid grid-cols-2 gap-4">
-          <Button 
-            variant="secondary" 
-            className="bg-green-100 text-green-600 hover:bg-green-200"
-            onClick={handleRequestSackEdit}
-          >
+          <Button variant="secondary" className="bg-green-100 text-green-600 hover:bg-green-200">
             Request sack edit
           </Button>
-          <Button onClick={handleSaveChanges}>
+          <Button>
             Save changes
           </Button>
         </div>
