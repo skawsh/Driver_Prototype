@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Clock, MapPin, Package, User, Phone, WashingMachine, Route, AlertCircle, X, ArrowLeft, Eye } from 'lucide-react';
+import { CheckCircle, Clock, MapPin, Package, User, Phone, WashingMachine, Route, AlertCircle, X, ArrowLeft, Eye, Zap, Timer } from 'lucide-react';
 import { Task, SubTask, Location, DriverState } from '@/types/task';
 import { calculateDistance, sortSubtasksByDistance, getClosestSubtask } from '@/utils/distance';
 import { toast } from 'sonner';
@@ -29,6 +29,7 @@ const initialTasks: Task[] = [
     id: "task1",
     orderNumber: "1234",
     items: 3,
+    washType: "express",
     subtasks: [
       {
         id: "task1-pickup",
@@ -59,6 +60,7 @@ const initialTasks: Task[] = [
     id: "task2",
     orderNumber: "5678",
     items: 2,
+    washType: "standard",
     subtasks: [
       {
         id: "task2-pickup",
@@ -89,6 +91,7 @@ const initialTasks: Task[] = [
     id: "task3",
     orderNumber: "9012",
     items: 1,
+    washType: "both",
     subtasks: [
       {
         id: "task3-collect",
@@ -123,6 +126,7 @@ const initialTasks: Task[] = [
     id: "task4",
     orderNumber: "3456",
     items: 4,
+    washType: "express",
     subtasks: [
       {
         id: "task4-collect",
@@ -157,6 +161,7 @@ const initialTasks: Task[] = [
     id: "task5",
     orderNumber: "7890",
     items: 2,
+    washType: "standard",
     subtasks: [
       {
         id: "task5-pickup",
@@ -221,6 +226,19 @@ const Index = () => {
       setActiveTaskId(closestSubtask.id);
     }
   }, [activeSubtasks.length, inProgressTask]);
+  
+  const expressOrders = tasks.filter(task => task.washType === 'express' || task.washType === 'both');
+  const standardOrders = tasks.filter(task => task.washType === 'standard');
+  
+  const expressSubtasks = activeSubtasks.filter(subtask => {
+    const parentTask = tasks.find(task => task.subtasks.some(st => st.id === subtask.id));
+    return parentTask && (parentTask.washType === 'express' || parentTask.washType === 'both');
+  });
+  
+  const standardSubtasks = activeSubtasks.filter(subtask => {
+    const parentTask = tasks.find(task => task.subtasks.some(st => st.id === subtask.id));
+    return parentTask && parentTask.washType === 'standard';
+  });
   
   const startTask = (subtask: SubTask) => {
     const parentTask = tasks.find(
@@ -710,112 +728,250 @@ const Index = () => {
           </div>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {activeSubtasks.map((subtask, index) => {
-            const parentTask = tasks.find(
-              task => task.subtasks.some(st => st.id === subtask.id)
-            );
-            
-            if (!parentTask) return null;
-            
-            if (subtask.type === 'collect') {
-              return renderCollectCard(subtask, parentTask, index);
-            }
-            
-            if (subtask.type === 'pickup') {
-              return renderPickupCard(subtask, parentTask, index);
-            }
-            
-            const isClosest = isClosestSubtask(subtask.id);
-            
-            return (
-              <motion.div
-                key={subtask.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-              >
-                <Card className={`task-card-hover relative overflow-hidden ${isClosest ? 'border-primary shadow-md' : ''}`}>
-                  <div className={`absolute top-0 left-0 w-1 h-full ${getSubtaskColor(subtask.type)}`} />
+        <div className="space-y-8">
+          {expressSubtasks.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Zap className="h-5 w-5 text-amber-500" />
+                <h2 className="text-xl font-semibold">Express Orders ({expressSubtasks.length})</h2>
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                {expressSubtasks.map((subtask, index) => {
+                  const parentTask = tasks.find(
+                    task => task.subtasks.some(st => st.id === subtask.id)
+                  );
                   
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg font-medium">
-                          Order #{parentTask.orderNumber}
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Task {getSubtaskTypeName(subtask.type)}
-                        </p>
-                      </div>
-                      <Badge variant={getSubtaskBadgeVariant(subtask.type)}>
-                        {getSubtaskTypeName(subtask.type)}
-                      </Badge>
-                    </div>
-                  </CardHeader>
+                  if (!parentTask) return null;
                   
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="flex-1">{subtask.customerName}</span>
-                      </div>
-                      
-                      <div className="flex items-start space-x-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                        <span>{subtask.location.address}</span>
-                      </div>
-                      
-                      {subtask.mobileNumber && (
-                        <div className="flex items-start space-x-2">
-                          <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
-                          <span>{subtask.mobileNumber}</span>
-                        </div>
-                      )}
-                      
-                      <Separator />
-                      
-                      <div className="flex justify-between pt-1">
-                        <div className="flex items-center space-x-2">
-                          <Package className="h-4 w-4 text-muted-foreground" />
-                          <span>{parentTask.items} items</span>
-                        </div>
+                  if (subtask.type === 'collect') {
+                    return renderCollectCard(subtask, parentTask, index);
+                  }
+                  
+                  if (subtask.type === 'pickup') {
+                    return renderPickupCard(subtask, parentTask, index);
+                  }
+                  
+                  const isClosest = isClosestSubtask(subtask.id);
+                  
+                  return (
+                    <motion.div
+                      key={subtask.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                    >
+                      <Card className={`task-card-hover relative overflow-hidden ${isClosest ? 'border-primary shadow-md' : ''}`}>
+                        <div className={`absolute top-0 left-0 w-1 h-full ${getSubtaskColor(subtask.type)}`} />
                         
-                        <div className="flex items-center space-x-2">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium text-primary">
-                            {subtask.distance !== undefined ? subtask.distance : 0} km
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button 
-                          variant="outline"
-                          onClick={() => viewDetails(subtask)}
-                          className="w-full"
-                        >
-                          View Details
-                        </Button>
+                        <CardHeader className="pb-2">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="flex items-center">
+                                <CardTitle className="text-lg font-medium mr-2">
+                                  Order #{parentTask.orderNumber}
+                                </CardTitle>
+                                <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">
+                                  <Zap className="h-3 w-3 mr-1" />
+                                  Express
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Task {getSubtaskTypeName(subtask.type)}
+                              </p>
+                            </div>
+                            <Badge variant={getSubtaskBadgeVariant(subtask.type)}>
+                              {getSubtaskTypeName(subtask.type)}
+                            </Badge>
+                          </div>
+                        </CardHeader>
                         
-                        <Button 
-                          className="w-full" 
-                          onClick={() => startTask(subtask)}
-                          disabled={!isClosest}
-                        >
-                          {isClosest ? `Start ${getSubtaskTypeName(subtask.type)}` : 'Not Next Task'}
-                        </Button>
-                      </div>
-                      
-                      {!isClosest && (
-                        <p className="text-xs text-center mt-1 text-gray-500">Complete the closest task first</p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
+                        <CardContent>
+                          <div className="space-y-3">
+                            <div className="flex items-center space-x-2">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <span className="flex-1">{subtask.customerName}</span>
+                            </div>
+                            
+                            <div className="flex items-start space-x-2">
+                              <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                              <span>{subtask.location.address}</span>
+                            </div>
+                            
+                            {subtask.mobileNumber && (
+                              <div className="flex items-start space-x-2">
+                                <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                <span>{subtask.mobileNumber}</span>
+                              </div>
+                            )}
+                            
+                            <Separator />
+                            
+                            <div className="flex justify-between pt-1">
+                              <div className="flex items-center space-x-2">
+                                <Package className="h-4 w-4 text-muted-foreground" />
+                                <span>{parentTask.items} items</span>
+                              </div>
+                              
+                              <div className="flex items-center space-x-2">
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-medium text-primary">
+                                  {subtask.distance !== undefined ? subtask.distance : 0} km
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2">
+                              <Button 
+                                variant="outline"
+                                onClick={() => viewDetails(subtask)}
+                                className="w-full"
+                              >
+                                View Details
+                              </Button>
+                              
+                              <Button 
+                                className="w-full" 
+                                onClick={() => startTask(subtask)}
+                                disabled={!isClosest}
+                              >
+                                {isClosest ? `Start ${getSubtaskTypeName(subtask.type)}` : 'Not Next Task'}
+                              </Button>
+                            </div>
+                            
+                            {!isClosest && (
+                              <p className="text-xs text-center mt-1 text-gray-500">Complete the closest task first</p>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          
+          {standardSubtasks.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Timer className="h-5 w-5 text-blue-500" />
+                <h2 className="text-xl font-semibold">Standard Orders ({standardSubtasks.length})</h2>
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                {standardSubtasks.map((subtask, index) => {
+                  const parentTask = tasks.find(
+                    task => task.subtasks.some(st => st.id === subtask.id)
+                  );
+                  
+                  if (!parentTask) return null;
+                  
+                  if (subtask.type === 'collect') {
+                    return renderCollectCard(subtask, parentTask, index);
+                  }
+                  
+                  if (subtask.type === 'pickup') {
+                    return renderPickupCard(subtask, parentTask, index);
+                  }
+                  
+                  const isClosest = isClosestSubtask(subtask.id);
+                  
+                  return (
+                    <motion.div
+                      key={subtask.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                    >
+                      <Card className={`task-card-hover relative overflow-hidden ${isClosest ? 'border-primary shadow-md' : ''}`}>
+                        <div className={`absolute top-0 left-0 w-1 h-full ${getSubtaskColor(subtask.type)}`} />
+                        
+                        <CardHeader className="pb-2">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="flex items-center">
+                                <CardTitle className="text-lg font-medium mr-2">
+                                  Order #{parentTask.orderNumber}
+                                </CardTitle>
+                                <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+                                  <Timer className="h-3 w-3 mr-1" />
+                                  Standard
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Task {getSubtaskTypeName(subtask.type)}
+                              </p>
+                            </div>
+                            <Badge variant={getSubtaskBadgeVariant(subtask.type)}>
+                              {getSubtaskTypeName(subtask.type)}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        
+                        <CardContent>
+                          <div className="space-y-3">
+                            <div className="flex items-center space-x-2">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <span className="flex-1">{subtask.customerName}</span>
+                            </div>
+                            
+                            <div className="flex items-start space-x-2">
+                              <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                              <span>{subtask.location.address}</span>
+                            </div>
+                            
+                            {subtask.mobileNumber && (
+                              <div className="flex items-start space-x-2">
+                                <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                <span>{subtask.mobileNumber}</span>
+                              </div>
+                            )}
+                            
+                            <Separator />
+                            
+                            <div className="flex justify-between pt-1">
+                              <div className="flex items-center space-x-2">
+                                <Package className="h-4 w-4 text-muted-foreground" />
+                                <span>{parentTask.items} items</span>
+                              </div>
+                              
+                              <div className="flex items-center space-x-2">
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                <span className="font-medium text-primary">
+                                  {subtask.distance !== undefined ? subtask.distance : 0} km
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2">
+                              <Button 
+                                variant="outline"
+                                onClick={() => viewDetails(subtask)}
+                                className="w-full"
+                              >
+                                View Details
+                              </Button>
+                              
+                              <Button 
+                                className="w-full" 
+                                onClick={() => startTask(subtask)}
+                                disabled={!isClosest}
+                              >
+                                {isClosest ? `Start ${getSubtaskTypeName(subtask.type)}` : 'Not Next Task'}
+                              </Button>
+                            </div>
+                            
+                            {!isClosest && (
+                              <p className="text-xs text-center mt-1 text-gray-500">Complete the closest task first</p>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
       
