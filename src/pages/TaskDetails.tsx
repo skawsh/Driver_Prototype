@@ -92,33 +92,39 @@ const TaskDetails = () => {
   };
 
   if (loading) {
-    return <div className="p-4">Loading...</div>;
+    return (
+      <div className="h-screen w-full flex items-center justify-center">
+        <div className="animate-pulse text-lg">Loading...</div>
+      </div>
+    );
   }
 
   if (!task || !parentTask) {
     return (
-      <div className="p-4">
+      <div className="h-screen w-full p-4">
         <div className="flex items-center mb-4">
           <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-semibold ml-2">Task not found</h1>
         </div>
-        <p>The requested task could not be found.</p>
+        <Card className="p-6">
+          <p>The requested task could not be found.</p>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto max-w-md p-4">
-      <div className="flex items-center mb-4">
+    <div className="h-screen w-full bg-gray-50 p-4">
+      <div className="flex items-center mb-6">
         <Button variant="ghost" size="icon" onClick={handleBack}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg font-semibold ml-2">Task Details</h1>
+        <h1 className="text-xl font-semibold ml-2">Task Details</h1>
       </div>
       
-      <Card className="overflow-hidden rounded-3xl border-2 border-primary shadow-lg mb-4">
+      <Card className="overflow-hidden rounded-3xl border-2 border-primary shadow-lg max-w-md mx-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <div className="text-xl font-bold">
