@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Scale, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Scale, Plus, Trash2, Copy, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -24,6 +24,8 @@ const TaskDetails = () => {
   const [editingItem, setEditingItem] = useState<ClothingItem | null>(null);
   const [newItemName, setNewItemName] = useState<string>('');
   const [newItemQuantity, setNewItemQuantity] = useState<string>('1');
+  const [isEditPopupOpen, setIsEditPopupOpen] = useState<boolean>(false);
+  const [editOrderId, setEditOrderId] = useState<string>('');
   
   const estimatedWeight = 2.5;
   const [washAndFoldItems, setWashAndFoldItems] = useState<ClothingItem[]>([
@@ -48,9 +50,31 @@ const TaskDetails = () => {
   };
   
   const handleRequestSackEdit = () => {
+    setIsEditPopupOpen(true);
+    setEditOrderId(orderId || '');
+  };
+  
+  const handleCopyOrderId = () => {
+    if (orderId) {
+      navigator.clipboard.writeText(orderId);
+      toast.success("Order ID copied to clipboard");
+    }
+  };
+  
+  const handleSubmitSackEdit = () => {
+    if (!editOrderId.trim()) {
+      toast.error("Order ID is required");
+      return;
+    }
+    
     toast.success("Sack edit request submitted", {
-      description: "Your request has been sent to the admin",
+      description: `Edit request sent for order ID: ${editOrderId}`,
     });
+    setIsEditPopupOpen(false);
+  };
+  
+  const handleCloseEditPopup = () => {
+    setIsEditPopupOpen(false);
   };
   
   const openAddItemSheet = () => {
@@ -135,7 +159,18 @@ const TaskDetails = () => {
         >
           <ArrowLeft className="h-6 w-6 text-black" />
         </Button>
-        <div className="text-lg font-bold">ID {orderId || '123456'}P</div>
+        <div className="text-lg font-bold flex items-center">
+          ID {orderId || '123456'}P
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-2 h-8 w-8 p-0"
+            onClick={handleCopyOrderId}
+            aria-label="Copy Order ID"
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
       
       <div className="bg-white rounded-lg p-4 flex-1 shadow-md">
@@ -225,6 +260,7 @@ const TaskDetails = () => {
         </Button>
       </div>
 
+      {/* Edit Item Sheet */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent>
           <SheetHeader>
@@ -288,6 +324,37 @@ const TaskDetails = () => {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      {/* Sack Edit Request Popup */}
+      {isEditPopupOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 relative">
+            <button 
+              onClick={handleCloseEditPopup}
+              className="absolute top-2 right-2"
+              aria-label="Close popup"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            
+            <div className="mt-4 mb-6">
+              <Input
+                placeholder="Enter the order ID"
+                value={editOrderId}
+                onChange={(e) => setEditOrderId(e.target.value)}
+                className="border border-gray-300 rounded px-3 py-2 w-full mb-4"
+              />
+              
+              <Button 
+                onClick={handleSubmitSackEdit}
+                className="w-full bg-green-400 hover:bg-green-500 text-black font-semibold py-2"
+              >
+                Request edit
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
