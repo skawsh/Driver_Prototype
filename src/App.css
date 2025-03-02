@@ -60,3 +60,18 @@
 .drop-card { border-left: 4px solid #6366f1; /* indigo-500 */ }
 .collect-card { border-left: 4px solid #22c55e; /* green-500 */ }
 .delivery-card { border-left: 4px solid #eab308; /* yellow-500 */ }
+
+/* Collect task button style */
+.collect-button {
+  background-color: #22c55e !important; /* green-500 */
+  color: black !important;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 12px 24px;
+  transition: all 0.2s ease-in-out;
+}
+
+.collect-button:hover {
+  background-color: #16a34a !important; /* green-600 */
+  transform: translateY(-1px);
+}

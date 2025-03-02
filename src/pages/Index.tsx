@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Clock, MapPin, Package, User } from 'lucide-react';
+import { CheckCircle, Clock, MapPin, Package, User, Phone, WashingMachine, Route } from 'lucide-react';
 import { Task, SubTask, Location, DriverState } from '@/types/task';
 import { calculateDistance, sortSubtasksByDistance } from '@/utils/distance';
 import { toast } from 'sonner';
@@ -38,6 +38,7 @@ const initialTasks: Task[] = [
         status: "pending",
         enabled: true,
         customerName: "Raj Sharma",
+        mobileNumber: "+91 98765 43210",
         location: {
           latitude: 17.4100,
           longitude: 78.4600,
@@ -50,6 +51,7 @@ const initialTasks: Task[] = [
         status: "pending",
         enabled: false,
         customerName: "Raj Sharma",
+        mobileNumber: "+91 98765 43210",
         location: studioLocation
       }
     ],
@@ -66,6 +68,7 @@ const initialTasks: Task[] = [
         status: "pending",
         enabled: true,
         customerName: "Priya Patel",
+        mobileNumber: "+91 87654 32109",
         location: {
           latitude: 17.4400,
           longitude: 78.4800,
@@ -78,6 +81,7 @@ const initialTasks: Task[] = [
         status: "pending",
         enabled: false,
         customerName: "Priya Patel",
+        mobileNumber: "+91 87654 32109",
         location: studioLocation
       }
     ],
@@ -93,7 +97,8 @@ const initialTasks: Task[] = [
         type: "collect",
         status: "pending",
         enabled: true,
-        customerName: "Arjun Reddy",
+        customerName: "Busy Bee",
+        mobileNumber: "+91 76543 21098",
         location: studioLocation
       },
       {
@@ -102,6 +107,7 @@ const initialTasks: Task[] = [
         status: "pending",
         enabled: false,
         customerName: "Arjun Reddy",
+        mobileNumber: "+91 76543 21098",
         location: {
           latitude: 17.4250,
           longitude: 78.4200,
@@ -121,7 +127,8 @@ const initialTasks: Task[] = [
         type: "collect",
         status: "pending",
         enabled: true,
-        customerName: "Lakshmi Devi",
+        customerName: "Busy Bee",
+        mobileNumber: "+91 65432 10987",
         location: studioLocation
       },
       {
@@ -130,6 +137,7 @@ const initialTasks: Task[] = [
         status: "pending",
         enabled: false,
         customerName: "Lakshmi Devi",
+        mobileNumber: "+91 65432 10987",
         location: {
           latitude: 17.4550,
           longitude: 78.5100,
@@ -150,6 +158,7 @@ const initialTasks: Task[] = [
         status: "pending",
         enabled: true,
         customerName: "Vikram Singh",
+        mobileNumber: "+91 54321 09876",
         location: {
           latitude: 17.4350,
           longitude: 78.4900,
@@ -162,6 +171,7 @@ const initialTasks: Task[] = [
         status: "pending",
         enabled: false,
         customerName: "Vikram Singh",
+        mobileNumber: "+91 54321 09876",
         location: studioLocation
       }
     ],
@@ -297,6 +307,56 @@ const Index = () => {
     }
   };
   
+  // Render the collect task card in a special format
+  const renderCollectCard = (subtask: SubTask, parentTask: Task, index: number) => {
+    return (
+      <motion.div
+        key={subtask.id}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: index * 0.1 }}
+      >
+        <Card className="overflow-hidden rounded-3xl border border-gray-200 shadow-sm">
+          <CardContent className="p-0">
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <div className="text-lg font-semibold">
+                  ID {parentTask.orderNumber}P
+                </div>
+                <div className="flex items-center text-sky-400 font-medium">
+                  <Route className="h-4 w-4 mr-1" />
+                  {subtask.distance} km
+                </div>
+              </div>
+              
+              <div className="flex items-center mb-3">
+                <WashingMachine className="h-5 w-5 mr-2" />
+                <span className="text-xl font-bold">{subtask.customerName}</span>
+              </div>
+              
+              <div className="flex items-start space-x-2 mb-3">
+                <MapPin className="h-5 w-5 text-gray-500 mt-0.5" />
+                <span>Location of the laundry shop</span>
+              </div>
+              
+              <div className="flex items-start space-x-2 mb-4">
+                <Phone className="h-5 w-5 text-gray-500 mt-0.5" />
+                <span>{subtask.mobileNumber || "Mobile number"}</span>
+              </div>
+              
+              <Button 
+                className="w-full h-12 text-lg font-semibold rounded-xl bg-green-400 hover:bg-green-500 text-black"
+                onClick={() => completeSubtask(subtask.id)}
+              >
+                Start Collect
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  };
+  
   return (
     <div className="py-6 md:py-8">
       <motion.div
@@ -336,6 +396,11 @@ const Index = () => {
             
             if (!parentTask) return null;
             
+            // Use special card design for collect subtasks
+            if (subtask.type === 'collect') {
+              return renderCollectCard(subtask, parentTask, index);
+            }
+            
             return (
               <motion.div
                 key={subtask.id}
@@ -373,6 +438,13 @@ const Index = () => {
                         <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                         <span className="flex-1">{subtask.location.address}</span>
                       </div>
+                      
+                      {subtask.mobileNumber && (
+                        <div className="flex items-start space-x-2">
+                          <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
+                          <span className="flex-1">{subtask.mobileNumber}</span>
+                        </div>
+                      )}
                       
                       <Separator />
                       

@@ -12,6 +12,7 @@ export interface SubTask {
   enabled: boolean;
   location: Location;
   customerName: string;
+  mobileNumber?: string; // Added mobile number field
   distance?: number; // Distance from current location
 }
 
