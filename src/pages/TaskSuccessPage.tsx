@@ -25,7 +25,7 @@ const TaskSuccessPage = () => {
   };
 
   const handleLocationReached = () => {
-    // Just navigate to home page without showing toast
+    // Navigate to home page without showing any toast message
     navigate('/');
   };
   
