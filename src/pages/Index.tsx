@@ -199,7 +199,26 @@ const Index = () => {
   const [inProgressTask, setInProgressTask] = useState<SubTask | null>(null);
   const [locationReachedTask, setLocationReachedTask] = useState<SubTask | null>(null);
   const [snoozedTasks, setSnoozedTasks] = useState<string[]>([]);
+  const [snoozedUntilLast, setSnoozedUntilLast] = useState<boolean>(false);
   const [selectedWashType, setSelectedWashType] = useState<'express' | 'standard'>('express');
+  
+  useEffect(() => {
+    const snoozeInfoStr = localStorage.getItem('snoozeInfo');
+    if (snoozeInfoStr) {
+      const snoozeInfo = JSON.parse(snoozeInfoStr);
+      if (snoozeInfo.snoozeType === 'next') {
+        setSnoozedTasks([snoozeInfo.taskId]);
+      } else if (snoozeInfo.snoozeType === 'last') {
+        setSnoozedUntilLast(true);
+      }
+    }
+  }, []);
+
+  const clearSnooze = () => {
+    localStorage.removeItem('snoozeInfo');
+    setSnoozedTasks([]);
+    setSnoozedUntilLast(false);
+  };
   
   const getActiveSubtasks = () => {
     const activeSubtasks: SubTask[] = [];
@@ -239,12 +258,35 @@ const Index = () => {
   const expressOrders = tasks.filter(task => task.washType === 'express' || task.washType === 'both');
   const standardOrders = tasks.filter(task => task.washType === 'standard');
   
-  const expressSubtasks = activeSubtasks.filter(subtask => {
+  const filteredActiveSubtasks = activeSubtasks.filter(subtask => {
+    if (snoozedTasks.length === 0 && !snoozedUntilLast) {
+      return true;
+    }
+    
+    if (snoozedTasks.includes(subtask.id)) {
+      return false;
+    }
+    
+    if (snoozedUntilLast) {
+      const parentTask = tasks.find(task => 
+        task.subtasks.some(st => st.id === subtask.id)
+      );
+      
+      if (parentTask && tasks[tasks.length - 1].id === parentTask.id) {
+        return true;
+      }
+      return false;
+    }
+    
+    return true;
+  });
+  
+  const expressSubtasks = filteredActiveSubtasks.filter(subtask => {
     const parentTask = tasks.find(task => task.subtasks.some(st => st.id === subtask.id));
     return parentTask && (parentTask.washType === 'express' || parentTask.washType === 'both');
   });
   
-  const standardSubtasks = activeSubtasks.filter(subtask => {
+  const standardSubtasks = filteredActiveSubtasks.filter(subtask => {
     const parentTask = tasks.find(task => task.subtasks.some(st => st.id === subtask.id));
     return parentTask && parentTask.washType === 'standard';
   });
@@ -314,6 +356,17 @@ const Index = () => {
           task.status = 'completed';
           taskCompleted = true;
           
+          const snoozeInfoStr = localStorage.getItem('snoozeInfo');
+          if (snoozeInfoStr) {
+            const snoozeInfo = JSON.parse(snoozeInfoStr);
+            if (snoozeInfo.snoozeType === 'next') {
+              clearSnooze();
+              toast.success("Snooze period ended!", {
+                description: "All tasks are now visible again",
+              });
+            }
+          }
+          
           setCompletedTasks(prev => [...prev, task]);
         }
         break;
@@ -323,6 +376,10 @@ const Index = () => {
     if (taskCompleted) {
       const filteredTasks = updatedTasks.filter(task => task.status !== 'completed');
       setTasks(filteredTasks);
+      
+      if (filteredTasks.length === 0 && snoozedUntilLast) {
+        clearSnooze();
+      }
     } else {
       setTasks(updatedTasks);
     }
@@ -833,6 +890,17 @@ const Index = () => {
                     if (!parentTask) return null;
                     return renderTaskCard(subtask, parentTask, index);
                   })
+                ) : snoozedUntilLast || snoozedTasks.length > 0 ? (
+                  <div className="p-4 text-center">
+                    <p className="text-muted-foreground">Orders snoozed according to your preference</p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-2"
+                      onClick={clearSnooze}
+                    >
+                      Cancel Snooze
+                    </Button>
+                  </div>
                 ) : (
                   <div className="p-4 text-center">
                     <p className="text-muted-foreground">No express orders available</p>
@@ -861,6 +929,17 @@ const Index = () => {
                     if (!parentTask) return null;
                     return renderTaskCard(subtask, parentTask, index);
                   })
+                ) : snoozedUntilLast || snoozedTasks.length > 0 ? (
+                  <div className="p-4 text-center">
+                    <p className="text-muted-foreground">Orders snoozed according to your preference</p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-2"
+                      onClick={clearSnooze}
+                    >
+                      Cancel Snooze
+                    </Button>
+                  </div>
                 ) : (
                   <div className="p-4 text-center">
                     <p className="text-muted-foreground">No standard orders available</p>
@@ -884,6 +963,26 @@ const Index = () => {
         transition={{ duration: 0.3 }}
       >
         <h1 className="text-2xl font-bold mb-6">Assigned Orders</h1>
+        {(snoozedUntilLast || snoozedTasks.length > 0) && (
+          <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-4 flex items-center justify-between">
+            <div className="flex items-center">
+              <Clock className="h-5 w-5 text-amber-500 mr-2" />
+              <span className="text-amber-800">
+                {snoozedUntilLast 
+                  ? "Snoozed until last order" 
+                  : "Snoozed until next order completion"}
+              </span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={clearSnooze}
+              className="text-amber-800 border-amber-300 hover:bg-amber-100"
+            >
+              Cancel Snooze
+            </Button>
+          </div>
+        )}
       </motion.div>
       
       <div
@@ -910,6 +1009,7 @@ const Index = () => {
                 setTasks(initialTasks);
                 setDriverState(initialDriverState);
                 setCompletedTasks([]);
+                clearSnooze();
                 toast.info("Tasks have been reset!");
               }}
             >

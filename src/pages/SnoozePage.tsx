@@ -18,6 +18,19 @@ const SnoozePage = () => {
   };
 
   const handleSnooze = () => {
+    // Find the task ID from the current URL
+    const currentTaskId = taskId || '';
+    
+    // Store snooze information in localStorage
+    const snoozeInfo = {
+      taskId: currentTaskId,
+      orderId: orderId || '',
+      snoozeType: snoozeOption,
+      timestamp: new Date().toISOString(),
+    };
+    
+    localStorage.setItem('snoozeInfo', JSON.stringify(snoozeInfo));
+    
     const snoozeMessage = snoozeOption === 'next' 
       ? "You will be notified after completion of the next order" 
       : "You will be notified after completion of the last order";
