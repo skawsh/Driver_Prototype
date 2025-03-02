@@ -14,7 +14,8 @@ export interface SubTask {
   customerName: string;
   mobileNumber?: string;
   distance?: number; // Distance from current location
-  isClosest?: boolean; // Added this property to fix the type error
+  isClosest?: boolean; // Whether this is the closest task
+  isSnoozed?: boolean; // Whether this task is snoozed
 }
 
 export interface Task {

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { MapPin, Package, Clock, User, Phone, WashingMachine, Route, Zap, Timer } from 'lucide-react';
+import { MapPin, Package, Clock, User, Phone, WashingMachine, Route, Zap, Timer, AlarmClock } from 'lucide-react';
 import { SubTask, Task } from '@/types/task';
 import { toast } from 'sonner';
 import { getSubtaskBadgeVariant, getSubtaskTypeName } from './CardTaskType';
@@ -21,6 +21,7 @@ const TaskCard = ({ subtask, parentTask, index }: TaskCardProps) => {
   const navigate = useNavigate();
   
   const isClosest = subtask.isClosest || false;
+  const isSnoozed = subtask.isSnoozed || false;
 
   const startTask = () => {
     navigate(`/task/${subtask.id}/${parentTask.orderNumber}`);
@@ -30,12 +31,28 @@ const TaskCard = ({ subtask, parentTask, index }: TaskCardProps) => {
     navigate(`/task/${subtask.id}/${parentTask.orderNumber}`);
   };
 
+  // Determine button text and disabled state
+  const buttonText = isSnoozed 
+    ? `Snoozed ${getSubtaskTypeName(subtask.type)}`
+    : isClosest 
+      ? `Start ${getSubtaskTypeName(subtask.type)}` 
+      : 'Not Next Task';
+      
+  const isButtonDisabled = !isClosest || isSnoozed;
+  
+  // Message to show under button
+  const helperMessage = isSnoozed 
+    ? "This task is snoozed" 
+    : !isClosest 
+      ? "Complete the closest task first" 
+      : "";
+
   if (subtask.type === 'collect') {
-    return renderCollectCard(subtask, parentTask, index, isClosest, startTask);
+    return renderCollectCard(subtask, parentTask, index, isClosest, isSnoozed, startTask, buttonText, isButtonDisabled, helperMessage);
   }
 
   if (subtask.type === 'pickup') {
-    return renderPickupCard(subtask, parentTask, index, isClosest, startTask);
+    return renderPickupCard(subtask, parentTask, index, isClosest, isSnoozed, startTask, buttonText, isButtonDisabled, helperMessage);
   }
 
   return (
@@ -45,7 +62,7 @@ const TaskCard = ({ subtask, parentTask, index }: TaskCardProps) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
     >
-      <Card className={`task-card-hover relative overflow-hidden ${isClosest ? 'border-primary shadow-md' : ''}`}>
+      <Card className={`task-card-hover relative overflow-hidden ${isClosest ? 'border-primary shadow-md' : ''} ${isSnoozed ? 'opacity-60' : ''}`}>
         <div className={`absolute top-0 left-0 w-1 h-full ${getSubtaskColor(subtask.type)}`} />
         
         <CardHeader className="pb-2">
@@ -75,9 +92,17 @@ const TaskCard = ({ subtask, parentTask, index }: TaskCardProps) => {
                 Task {getSubtaskTypeName(subtask.type)}
               </p>
             </div>
-            <Badge variant={getSubtaskBadgeVariant(subtask.type)}>
-              {getSubtaskTypeName(subtask.type)}
-            </Badge>
+            <div className="flex gap-1">
+              {isSnoozed && (
+                <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200">
+                  <AlarmClock className="h-3 w-3 mr-1" />
+                  Snoozed
+                </Badge>
+              )}
+              <Badge variant={getSubtaskBadgeVariant(subtask.type)}>
+                {getSubtaskTypeName(subtask.type)}
+              </Badge>
+            </div>
           </div>
         </CardHeader>
         
@@ -121,21 +146,22 @@ const TaskCard = ({ subtask, parentTask, index }: TaskCardProps) => {
                 variant="outline"
                 onClick={viewDetails}
                 className="w-full"
+                disabled={isSnoozed}
               >
                 View Details
               </Button>
               
               <Button 
-                className="w-full" 
+                className={`w-full ${isSnoozed ? 'bg-amber-400 hover:bg-amber-500' : ''}`}
                 onClick={startTask}
-                disabled={!isClosest}
+                disabled={isButtonDisabled}
               >
-                {isClosest ? `Start ${getSubtaskTypeName(subtask.type)}` : 'Not Next Task'}
+                {buttonText}
               </Button>
             </div>
             
-            {!isClosest && (
-              <p className="text-xs text-center mt-1 text-gray-500">Complete the closest task first</p>
+            {helperMessage && (
+              <p className="text-xs text-center mt-1 text-gray-500">{helperMessage}</p>
             )}
           </div>
         </CardContent>
@@ -164,7 +190,11 @@ function renderCollectCard(
   parentTask: Task, 
   index: number,
   isClosest: boolean,
-  startTask: () => void
+  isSnoozed: boolean,
+  startTask: () => void,
+  buttonText: string,
+  isButtonDisabled: boolean,
+  helperMessage: string
 ) {
   return (
     <motion.div
@@ -173,16 +203,24 @@ function renderCollectCard(
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
     >
-      <Card className={`overflow-hidden rounded-3xl border ${isClosest ? 'border-green-500 shadow-md' : 'border-gray-200'} shadow-sm`}>
+      <Card className={`overflow-hidden rounded-3xl border ${isClosest ? 'border-green-500 shadow-md' : 'border-gray-200'} shadow-sm ${isSnoozed ? 'opacity-60' : ''}`}>
         <CardContent className="p-0">
           <div className="p-4">
             <div className="flex justify-between items-start mb-4">
               <div className="text-lg font-semibold">
                 ID {parentTask.orderNumber}P
               </div>
-              <div className="flex items-center text-sky-400 font-medium">
-                <Route className="h-4 w-4 mr-1" />
-                {subtask.distance !== undefined ? subtask.distance : 0} km
+              <div className="flex items-center">
+                {isSnoozed && (
+                  <span className="mr-2 text-amber-500 flex items-center">
+                    <AlarmClock className="h-4 w-4 mr-1" />
+                    Snoozed
+                  </span>
+                )}
+                <span className="text-sky-400 font-medium flex items-center">
+                  <Route className="h-4 w-4 mr-1" />
+                  {subtask.distance !== undefined ? subtask.distance : 0} km
+                </span>
               </div>
             </div>
             
@@ -202,14 +240,14 @@ function renderCollectCard(
             </div>
             
             <Button 
-              className={`w-full h-12 text-lg font-semibold rounded-xl ${isClosest ? 'bg-green-500 hover:bg-green-600' : 'bg-green-400 hover:bg-green-500'} text-black`}
+              className={`w-full h-12 text-lg font-semibold rounded-xl ${isSnoozed ? 'bg-amber-400 hover:bg-amber-500 text-white' : isClosest ? 'bg-green-500 hover:bg-green-600' : 'bg-green-400 hover:bg-green-500'} ${isSnoozed ? 'text-white' : 'text-black'}`}
               onClick={startTask}
-              disabled={!isClosest}
+              disabled={isButtonDisabled}
             >
-              {isClosest ? 'Start Collect' : 'Not Next Task'}
+              {buttonText}
             </Button>
-            {!isClosest && (
-              <p className="text-xs text-center mt-2 text-gray-500">Complete the closest task first</p>
+            {helperMessage && (
+              <p className="text-xs text-center mt-2 text-gray-500">{helperMessage}</p>
             )}
           </div>
         </CardContent>
@@ -223,7 +261,11 @@ function renderPickupCard(
   parentTask: Task, 
   index: number,
   isClosest: boolean,
-  startTask: () => void
+  isSnoozed: boolean,
+  startTask: () => void,
+  buttonText: string,
+  isButtonDisabled: boolean,
+  helperMessage: string
 ) {
   return (
     <motion.div
@@ -232,16 +274,24 @@ function renderPickupCard(
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.1 }}
     >
-      <Card className={`overflow-hidden rounded-3xl border ${isClosest ? 'border-sky-500 shadow-md' : 'border-gray-200'} shadow-sm`}>
+      <Card className={`overflow-hidden rounded-3xl border ${isClosest ? 'border-sky-500 shadow-md' : 'border-gray-200'} shadow-sm ${isSnoozed ? 'opacity-60' : ''}`}>
         <CardContent className="p-0">
           <div className="p-4">
             <div className="flex justify-between items-start mb-4">
               <div className="text-lg font-semibold">
                 ID {parentTask.orderNumber}P
               </div>
-              <div className="flex items-center text-sky-400 font-medium">
-                <Route className="h-4 w-4 mr-1" />
-                {subtask.distance !== undefined ? subtask.distance : 0} km
+              <div className="flex items-center">
+                {isSnoozed && (
+                  <span className="mr-2 text-amber-500 flex items-center">
+                    <AlarmClock className="h-4 w-4 mr-1" />
+                    Snoozed
+                  </span>
+                )}
+                <span className="text-sky-400 font-medium flex items-center">
+                  <Route className="h-4 w-4 mr-1" />
+                  {subtask.distance !== undefined ? subtask.distance : 0} km
+                </span>
               </div>
             </div>
             
@@ -261,14 +311,14 @@ function renderPickupCard(
             </div>
             
             <Button 
-              className={`w-full h-12 text-lg font-semibold rounded-xl ${isClosest ? 'bg-sky-500 hover:bg-sky-600' : 'bg-sky-400 hover:bg-sky-500'} text-white`}
+              className={`w-full h-12 text-lg font-semibold rounded-xl ${isSnoozed ? 'bg-amber-400 hover:bg-amber-500' : isClosest ? 'bg-sky-500 hover:bg-sky-600' : 'bg-sky-400 hover:bg-sky-500'} text-white`}
               onClick={startTask}
-              disabled={!isClosest}
+              disabled={isButtonDisabled}
             >
-              {isClosest ? 'Start Pickup' : 'Not Next Task'}
+              {buttonText}
             </Button>
-            {!isClosest && (
-              <p className="text-xs text-center mt-2 text-gray-500">Complete the closest task first</p>
+            {helperMessage && (
+              <p className="text-xs text-center mt-2 text-gray-500">{helperMessage}</p>
             )}
           </div>
         </CardContent>

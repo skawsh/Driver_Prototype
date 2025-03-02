@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
-import { Zap, Timer } from 'lucide-react';
+import { Zap, Timer, AlarmClock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SubTask, Task } from '@/types/task';
 import TaskCard from './TaskCard';
@@ -34,21 +34,34 @@ const OrderCategorySection = ({
     task.washType === 'standard'
   ).length;
 
+  // Count snoozed tasks
+  const snoozedTasksCount = subtasks.filter(task => task.isSnoozed).length;
+  const hasSnoozedTasks = snoozedTasksCount > 0;
+
   return (
     <Card 
       className={`cursor-pointer transition ${isExpress ? 'border-amber-400' : 'border-blue-400'} ${isSelectedType ? 'shadow-md' : ''}`}
       onClick={onClick}
     >
       <CardHeader className="pb-2">
-        <div className="flex items-center gap-2">
-          {isExpress ? (
-            <Zap className="h-5 w-5 text-amber-500" />
-          ) : (
-            <Timer className="h-5 w-5 text-blue-500" />
+        <div className="flex items-center gap-2 justify-between">
+          <div className="flex items-center gap-2">
+            {isExpress ? (
+              <Zap className="h-5 w-5 text-amber-500" />
+            ) : (
+              <Timer className="h-5 w-5 text-blue-500" />
+            )}
+            <h2 className="text-xl font-semibold">
+              {isExpress ? 'Express' : 'Standard'} Orders ({orderCount})
+            </h2>
+          </div>
+          
+          {hasSnoozedTasks && (
+            <div className="flex items-center text-amber-500">
+              <AlarmClock className="h-4 w-4 mr-1" />
+              <span className="text-sm">{snoozedTasksCount} snoozed</span>
+            </div>
           )}
-          <h2 className="text-xl font-semibold">
-            {isExpress ? 'Express' : 'Standard'} Orders ({orderCount})
-          </h2>
         </div>
         <p className="text-sm text-muted-foreground">
           {isExpress ? 'High' : 'Regular'} priority orders

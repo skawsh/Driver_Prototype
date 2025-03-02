@@ -21,32 +21,48 @@ export const getActiveSubtasks = (tasks: Task[], driverState: DriverState) => {
 };
 
 export const markClosestSubtask = (subtasks: SubTask[], snoozedTasks: string[], snoozedUntilLast: boolean, tasks: Task[]) => {
-  const filteredSubtasks = subtasks.filter(subtask => {
-    if (snoozedTasks.includes(subtask.id)) {
-      return false;
-    }
+  // First, we identify which subtasks are snoozed
+  const snoozedSubtasks = subtasks.filter(subtask => 
+    snoozedTasks.includes(subtask.id) || 
+    (snoozedUntilLast && isPartOfTaskBeforeLast(subtask.id, tasks))
+  );
+  
+  // Then we get the active subtasks that are not snoozed
+  const activeNonSnoozedSubtasks = subtasks.filter(subtask => 
+    !snoozedTasks.includes(subtask.id) && 
+    !(snoozedUntilLast && isPartOfTaskBeforeLast(subtask.id, tasks))
+  );
+  
+  // Find the closest non-snoozed subtask
+  const closestSubtask = getClosestSubtask(activeNonSnoozedSubtasks);
+  
+  // Mark all subtasks accordingly
+  return subtasks.map(subtask => {
+    const isSnoozed = snoozedTasks.includes(subtask.id) || 
+                     (snoozedUntilLast && isPartOfTaskBeforeLast(subtask.id, tasks));
     
-    if (snoozedUntilLast) {
-      const parentTask = tasks.find(task => 
-        task.subtasks.some(st => st.id === subtask.id)
-      );
-      
-      if (parentTask && tasks[tasks.length - 1].id === parentTask.id) {
-        return true;
-      }
-      return false;
-    }
-    
-    return true;
+    return {
+      ...subtask,
+      isClosest: closestSubtask ? subtask.id === closestSubtask.id : false,
+      isSnoozed: isSnoozed
+    };
   });
-  
-  const closestSubtask = getClosestSubtask(filteredSubtasks);
-  
-  return subtasks.map(subtask => ({
-    ...subtask,
-    isClosest: closestSubtask ? subtask.id === closestSubtask.id : false
-  }));
 };
+
+// Helper function to determine if a subtask is part of a task before the last task
+function isPartOfTaskBeforeLast(subtaskId: string, tasks: Task[]): boolean {
+  if (tasks.length <= 1) return false;
+  
+  const lastTaskId = tasks[tasks.length - 1].id;
+  
+  for (let i = 0; i < tasks.length - 1; i++) {
+    if (tasks[i].subtasks.some(st => st.id === subtaskId)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
 
 export const filterSubtasksByWashType = (subtasks: SubTask[], tasks: Task[], type: 'express' | 'standard') => {
   return subtasks.filter(subtask => {
