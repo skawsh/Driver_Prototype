@@ -114,6 +114,62 @@ export const Sidebar = () => {
           />
         </nav>
       </aside>
+      
+      {/* Mobile Navigation Drawer */}
+      <div className="lg:hidden">
+        <div className="fixed inset-0 z-40 flex pointer-events-none">
+          <div className={cn(
+            "fixed inset-y-0 left-0 z-50 w-64 bg-sidebar shadow-lg transform transition-transform duration-300 ease-in-out",
+            "pointer-events-auto",
+            !isOpen && "-translate-x-full"
+          )}>
+            <div className="h-full flex flex-col">
+              <div className="p-4 border-b flex items-center justify-between h-16">
+                <h1 className="font-semibold text-lg">Driver Panel</h1>
+                <SidebarTrigger>
+                  <ChevronLeft className="h-5 w-5" />
+                </SidebarTrigger>
+              </div>
+              
+              <nav className="flex-1 pt-5 pb-10 px-3 space-y-1 overflow-y-auto">
+                <NavItem 
+                  icon={List} 
+                  title="Assigned Orders" 
+                  to="/" 
+                  isSidebarOpen={true} 
+                />
+                <NavItem 
+                  icon={Archive} 
+                  title="Order History" 
+                  to="/order-history" 
+                  isSidebarOpen={true} 
+                />
+                <NavItem 
+                  icon={User} 
+                  title="Profile" 
+                  to="/profile" 
+                  isSidebarOpen={true} 
+                />
+                <NavItem 
+                  icon={Settings} 
+                  title="Settings" 
+                  to="/settings" 
+                  isSidebarOpen={true} 
+                />
+              </nav>
+            </div>
+          </div>
+          
+          {/* Overlay for closing the sidebar */}
+          <div 
+            className={cn(
+              "fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity duration-300",
+              isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+            )}
+            onClick={() => setIsOpen(false)}
+          />
+        </div>
+      </div>
     </>
   );
 };
