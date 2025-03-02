@@ -86,3 +86,21 @@
   background-color: #bbf7d0 !important; /* green-200 */
   transform: translateY(-1px);
 }
+
+/* Clock icon styling */
+.clock-icon {
+  cursor: pointer;
+  color: #38bdf8;
+  transition: transform 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.clock-icon:hover {
+  transform: scale(1.1);
+  color: #0ea5e9;
+}
+
+.distance-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
