@@ -14,6 +14,7 @@ export interface SubTask {
   customerName: string;
   mobileNumber?: string;
   distance?: number; // Distance from current location
+  isClosest?: boolean; // Added this property to fix the type error
 }
 
 export interface Task {
