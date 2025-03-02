@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -94,7 +95,7 @@ const initialTasks: Task[] = [
         type: "collect",
         status: "pending",
         enabled: true,
-        customerName: "Busy Bee",
+        customerName: "Laundry Express",
         mobileNumber: "+91 76543 21098",
         location: studioLocation
       },
@@ -124,7 +125,7 @@ const initialTasks: Task[] = [
         type: "collect",
         status: "pending",
         enabled: true,
-        customerName: "Busy Bee",
+        customerName: "Clean & Fresh",
         mobileNumber: "+91 65432 10987",
         location: studioLocation
       },
