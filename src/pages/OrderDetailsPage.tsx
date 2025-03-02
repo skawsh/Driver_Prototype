@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Scale, Copy, Minus, Plus } from 'lucide-react';
+import { ArrowLeft, Scale, Copy, Minus, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
@@ -81,6 +80,26 @@ const OrderDetailsPage = () => {
     setIsEditModalOpen(false);
     setCurrentEditItem(null);
     toast.success("Item updated successfully");
+  };
+  
+  const handleDeleteItem = () => {
+    if (!currentEditItem) return;
+    
+    setOrderData(prevData => {
+      const updatedData = {...prevData};
+      
+      if (currentEditItem.section === 'washAndFold') {
+        updatedData.washAndFold = updatedData.washAndFold.filter(item => 
+          item.id !== currentEditItem.id
+        );
+      }
+      
+      return updatedData;
+    });
+    
+    setIsEditModalOpen(false);
+    setCurrentEditItem(null);
+    toast.success("Item deleted successfully");
   };
   
   const handleAddItem = () => {
@@ -295,6 +314,15 @@ const OrderDetailsPage = () => {
                   </Button>
                 </div>
               </div>
+              
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteItem}
+                className="w-full flex items-center justify-center gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Item
+              </Button>
             </div>
           )}
           
