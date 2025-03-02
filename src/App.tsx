@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import Layout from "./components/layout/Layout";
 import TaskDetails from "./pages/TaskDetails";
 import TaskSuccessPage from "./pages/TaskSuccessPage";
+import OrderDetailsPage from "./pages/OrderDetailsPage";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="/task/:taskId/:orderId" element={<TaskDetails />} />
             <Route path="/task-success/:taskId/:orderId" element={<TaskSuccessPage />} />
+            <Route path="/order-details/:taskId/:orderId" element={<OrderDetailsPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -20,7 +20,8 @@ const TaskSuccessPage = () => {
   };
 
   const handleViewDetails = () => {
-    navigate('/');
+    // Navigate to the order details page
+    navigate(`/order-details/${taskId}/${orderId}`);
   };
 
   const handleLocationReached = () => {
