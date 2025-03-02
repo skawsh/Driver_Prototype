@@ -33,7 +33,7 @@ const SnoozePage = () => {
     
     const snoozeMessage = snoozeOption === 'next' 
       ? "You will be notified after completion of the next order" 
-      : "You will be notified after completion of the last order";
+      : "Order snoozed and moved to the end of the list";
     
     toast.success("Snooze activated!", {
       description: snoozeMessage,
@@ -74,7 +74,7 @@ const SnoozePage = () => {
             <div className="flex items-start space-x-2">
               <RadioGroupItem value="last" id="last" />
               <Label htmlFor="last" className="font-medium cursor-pointer">
-                Snooze to the last order in the list
+                Snooze the order and move it to the last in the list
               </Label>
             </div>
           </RadioGroup>
