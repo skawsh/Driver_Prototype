@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { MapPin, Phone, WashingMachine, ArrowLeft, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const TaskSuccessPage = () => {
   const { taskId, orderId } = useParams<{ taskId: string; orderId: string }>();
@@ -58,11 +59,17 @@ const TaskSuccessPage = () => {
                 <MapPin className="h-4 w-4 text-blue-500 mr-1" />
                 <span className="text-blue-500 font-medium">{taskData.distance}</span>
               </div>
-              <Clock 
-                className="h-5 w-5 text-blue-500 cursor-pointer hover:text-blue-600" 
-                onClick={handleSnooze}
-                title="Snooze this task"
-              />
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Clock 
+                    className="h-5 w-5 text-blue-500 cursor-pointer hover:text-blue-600" 
+                    onClick={handleSnooze}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Snooze this task</p>
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
           
