@@ -191,7 +191,6 @@ const Index = () => {
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [inProgressTask, setInProgressTask] = useState<SubTask | null>(null);
   const [locationReachedTask, setLocationReachedTask] = useState<SubTask | null>(null);
-  const [snoozedTasks, setSnoozedTasks] = useState<string[]>([]);
   
   const getActiveSubtasks = () => {
     const activeSubtasks: SubTask[] = [];
@@ -245,18 +244,6 @@ const Index = () => {
         description: "Please confirm task completion",
       });
     }
-  }
-  
-  const snoozeTask = (taskId: string) => {
-    setSnoozedTasks(prev => [...prev, taskId]);
-    toast.info("Task snoozed for 30 minutes", {
-      description: "You can resume this task later",
-    });
-    
-    setTimeout(() => {
-      setSnoozedTasks(prev => prev.filter(id => id !== taskId));
-      toast.info("Snoozed task is now available again");
-    }, 30 * 60 * 1000);
   }
   
   const completeSubtask = (subtaskId: string) => {
@@ -388,7 +375,7 @@ const Index = () => {
                 <div className="text-lg font-semibold">
                   ID {parentTask.orderNumber}P
                 </div>
-                <div className="distance-container">
+                <div className="flex items-center gap-1">
                   <div className="flex items-center text-sky-400 font-medium">
                     <MapPin className="h-4 w-4 mr-1" />
                     {locationReachedTask.distance !== undefined ? locationReachedTask.distance : 0} Km
@@ -460,75 +447,73 @@ const Index = () => {
         transition={{ duration: 0.3 }}
       >
         <Card className="overflow-hidden rounded-3xl border-2 border-primary shadow-lg relative">
-          <div className="p-4">
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold">ID {parentTask.orderNumber}P</span>
-                <MapPin className="h-5 w-5 text-sky-400" />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 z-10"
+            onClick={cancelTask}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+          
+          <CardContent className="p-0">
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <div className="text-lg font-semibold">
+                  ID {parentTask.orderNumber}P
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="flex items-center text-sky-400 font-medium">
+                    <Route className="h-4 w-4 mr-1" />
+                    {inProgressTask.distance !== undefined ? inProgressTask.distance : 0} Km
+                  </div>
+                  <Clock className="h-5 w-5 text-gray-400 ml-2" />
+                </div>
               </div>
               
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 p-0"
-                onClick={cancelTask}
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-            
-            <div className="flex items-center mb-4">
-              <WashingMachine className="h-5 w-5 mr-2" />
-              <span className="text-xl font-bold">{inProgressTask.customerName}</span>
-              <Clock 
-                className="h-5 w-5 ml-2 clock-icon" 
-                onClick={() => snoozeTask(inProgressTask.id)}
-                aria-label="Snooze this task for 30 minutes"
-              />
-            </div>
-            
-            <div className="flex items-center text-sky-400 font-medium mb-3">
-              <Route className="h-4 w-4 mr-1" />
-              {inProgressTask.distance !== undefined ? inProgressTask.distance : 0} Km
-            </div>
-            
-            <a 
-              href={`https://maps.google.com/?q=${inProgressTask.location.latitude},${inProgressTask.location.longitude}`} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-start space-x-2 mb-3 text-blue-500 hover:underline"
-            >
-              <MapPin className="h-5 w-5 text-blue-500 mt-0.5" />
-              <span className="break-all">{inProgressTask.location.address}</span>
-            </a>
-            
-            {inProgressTask.mobileNumber && (
-              <a 
-                href={`tel:${inProgressTask.mobileNumber}`}
-                className="flex items-start space-x-2 mb-4 text-blue-500 hover:underline"
-              >
-                <Phone className="h-5 w-5 text-blue-500 mt-0.5" />
-                <span>{inProgressTask.mobileNumber.replace(/\+91 /, '')}</span>
-              </a>
-            )}
-            
-            <div className="grid grid-cols-1 gap-3 mt-4">
-              <Button 
-                variant="destructive"
-                className="rounded-xl"
-                onClick={reportIssue}
-              >
-                Report issue
-              </Button>
+              <div className="flex items-center mb-4">
+                <WashingMachine className="h-5 w-5 mr-2" />
+                <span className="text-xl font-bold">{inProgressTask.customerName}</span>
+              </div>
               
-              <Button 
-                className="location-reached-button w-full h-12 text-lg font-semibold"
-                onClick={locationReached}
+              <a 
+                href={`https://maps.google.com/?q=${inProgressTask.location.latitude},${inProgressTask.location.longitude}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-start space-x-2 mb-3 text-blue-500 hover:underline"
               >
-                Location reached
-              </Button>
+                <MapPin className="h-5 w-5 text-blue-500 mt-0.5" />
+                <span className="break-all">{inProgressTask.location.address}</span>
+              </a>
+              
+              {inProgressTask.mobileNumber && (
+                <a 
+                  href={`tel:${inProgressTask.mobileNumber}`}
+                  className="flex items-start space-x-2 mb-4 text-blue-500 hover:underline"
+                >
+                  <Phone className="h-5 w-5 text-blue-500 mt-0.5" />
+                  <span>{inProgressTask.mobileNumber.replace(/\+91 /, '')}</span>
+                </a>
+              )}
+              
+              <div className="grid grid-cols-1 gap-3 mt-4">
+                <Button 
+                  variant="destructive"
+                  className="rounded-xl"
+                  onClick={reportIssue}
+                >
+                  Report issue
+                </Button>
+                
+                <Button 
+                  className="location-reached-button w-full h-12 text-lg font-semibold"
+                  onClick={locationReached}
+                >
+                  Location reached
+                </Button>
+              </div>
             </div>
-          </div>
+          </CardContent>
         </Card>
       </motion.div>
     );
@@ -737,7 +722,7 @@ const Index = () => {
                       {subtask.mobileNumber && (
                         <div className="flex items-start space-x-2">
                           <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
-                          <span>{subtask.mobileNumber}</span>
+                          <span className="flex-1">{subtask.mobileNumber}</span>
                         </div>
                       )}
                       
