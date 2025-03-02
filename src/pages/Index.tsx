@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Clock, MapPin, Package, User, Phone, WashingMachine, Route, AlertCircle, X, ArrowLeft } from 'lucide-react';
+import { CheckCircle, Clock, MapPin, Package, User, Phone, WashingMachine, Route, AlertCircle, X, ArrowLeft, Eye } from 'lucide-react';
 import { Task, SubTask, Location, DriverState } from '@/types/task';
 import { calculateDistance, sortSubtasksByDistance, getClosestSubtask } from '@/utils/distance';
 import { toast } from 'sonner';
@@ -666,8 +666,10 @@ const Index = () => {
     );
   };
   
+  const journeyNumber = completedTasks.length + 1;
+  
   return (
-    <div className="py-6 md:py-8">
+    <div className="py-6 md:py-8 relative">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -675,6 +677,14 @@ const Index = () => {
       >
         <h1 className="text-2xl font-bold mb-6">Assigned Orders</h1>
       </motion.div>
+      
+      <div
+        className="fixed bottom-5 left-5 opacity-5 text-xs pointer-events-none select-none z-50"
+        aria-hidden="true"
+      >
+        <Eye className="h-3 w-3 inline-block mr-1" />
+        <span>{journeyNumber}</span>
+      </div>
       
       {locationReachedTask ? (
         renderLocationReachedTask()
