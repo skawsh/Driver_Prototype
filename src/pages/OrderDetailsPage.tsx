@@ -182,7 +182,7 @@ const OrderDetailsPage = () => {
       setIsSaving(false);
       toast({
         title: "Success",
-        description: "Sack edit requested. You can now modify the items.",
+        description: "Edit request sent. Now user will modify the order details.",
         duration: 3000,
       });
     }, 1000);
