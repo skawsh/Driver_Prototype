@@ -35,12 +35,12 @@ const initialTasks: Task[] = [
         type: "pickup",
         status: "pending",
         enabled: true,
-        customerName: "Raj Sharma",
-        mobileNumber: "+91 98765 43210",
+        customerName: "Saiteja",
+        mobileNumber: "8197739892",
         location: {
           latitude: 17.4100,
           longitude: 78.4600,
-          address: "task1-pickup: 123 Jubilee Hills, Hyderabad, Telangana 500033"
+          address: "320f, Deepa PG, Sector 21, Gurugram"
         }
       },
       {
@@ -48,8 +48,8 @@ const initialTasks: Task[] = [
         type: "drop",
         status: "pending",
         enabled: false,
-        customerName: "Raj Sharma",
-        mobileNumber: "+91 98765 43210",
+        customerName: "Saiteja",
+        mobileNumber: "8197739892",
         location: studioLocation
       }
     ],
