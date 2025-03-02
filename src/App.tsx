@@ -10,6 +10,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Layout from "./components/layout/Layout";
+import TaskDetails from "./pages/TaskDetails";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/order-history" element={<OrderHistory />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/task/:taskId/:orderId" element={<TaskDetails />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
