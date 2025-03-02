@@ -37,7 +37,8 @@ const OrderDetailsPage = () => {
       { id: 1, name: "Coat", quantity: 1 },
       { id: 2, name: "Dress", quantity: 2 },
       { id: 3, name: "Jacket", quantity: 1 }
-    ]
+    ],
+    savedChanges: false
   });
 
   // Track changes to enable save button
@@ -162,7 +163,8 @@ const OrderDetailsPage = () => {
       // Update actual weight in order data
       setOrderData(prev => ({
         ...prev,
-        actualWeight: actualWeight
+        actualWeight: actualWeight,
+        savedChanges: true
       }));
       
       setIsEditing(false);
@@ -170,7 +172,8 @@ const OrderDetailsPage = () => {
       setHasChanges(false);
       toast.success("Changes saved successfully");
       
-      navigate(`/tasks/${taskId}`);
+      // Instead of navigating away, stay on the same page to show saved values
+      // navigate(`/tasks/${taskId}`);
     }, 1500);
   };
   
@@ -257,6 +260,22 @@ const OrderDetailsPage = () => {
                 <span className="font-medium">Kg</span>
               </div>
             </div>
+            
+            {orderData.savedChanges && orderData.actualWeight && (
+              <div className="bg-green-50 p-4 rounded-md border border-green-200 mb-4">
+                <h3 className="font-medium text-green-700 mb-2">Saved Information</h3>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-gray-700">Actual weight recorded</span>
+                  <span className="font-medium">{orderData.actualWeight} Kg</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-700">Total items</span>
+                  <span className="font-medium">
+                    {orderData.washAndFold.reduce((total, item) => total + item.quantity, 0)}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
           
           <Separator />
