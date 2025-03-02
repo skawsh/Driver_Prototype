@@ -93,7 +93,7 @@ const ReportIssuePage = () => {
       
       toast({
         title: "Success",
-        description: "Issue reported successfully. The order has been rescheduled.",
+        description: "Issue has been reported successfully",
         duration: 5000,
       });
       
