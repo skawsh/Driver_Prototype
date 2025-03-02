@@ -768,6 +768,7 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Express Orders Section */}
             {(selectedWashType === 'all' || selectedWashType === 'express') && expressSubtasks.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-4">
@@ -841,6 +842,3 @@ const Index = () => {
                                   <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
                                   <span>{subtask.mobileNumber}</span>
                                 </div>
-                              )}
-                              
-                              <
