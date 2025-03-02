@@ -191,6 +191,7 @@ const Index = () => {
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [inProgressTask, setInProgressTask] = useState<SubTask | null>(null);
   const [locationReachedTask, setLocationReachedTask] = useState<SubTask | null>(null);
+  const [snoozedTasks, setSnoozedTasks] = useState<string[]>([]);
   
   const getActiveSubtasks = () => {
     const activeSubtasks: SubTask[] = [];
@@ -244,6 +245,18 @@ const Index = () => {
         description: "Please confirm task completion",
       });
     }
+  }
+  
+  const snoozeTask = (taskId: string) => {
+    setSnoozedTasks(prev => [...prev, taskId]);
+    toast.info("Task snoozed for 30 minutes", {
+      description: "You can resume this task later",
+    });
+    
+    setTimeout(() => {
+      setSnoozedTasks(prev => prev.filter(id => id !== taskId));
+      toast.info("Snoozed task is now available again");
+    }, 30 * 60 * 1000);
   }
   
   const completeSubtask = (subtaskId: string) => {
@@ -375,7 +388,7 @@ const Index = () => {
                 <div className="text-lg font-semibold">
                   ID {parentTask.orderNumber}P
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="distance-container">
                   <div className="flex items-center text-sky-400 font-medium">
                     <MapPin className="h-4 w-4 mr-1" />
                     {locationReachedTask.distance !== undefined ? locationReachedTask.distance : 0} Km
@@ -462,12 +475,16 @@ const Index = () => {
                 <div className="text-lg font-semibold">
                   ID {parentTask.orderNumber}P
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="distance-container">
                   <div className="flex items-center text-sky-400 font-medium">
-                    <Route className="h-4 w-4 mr-1" />
+                    <MapPin className="h-4 w-4 mr-1" />
                     {inProgressTask.distance !== undefined ? inProgressTask.distance : 0} Km
                   </div>
-                  <Clock className="h-5 w-5 text-gray-400 ml-2" />
+                  <Clock 
+                    className="h-5 w-5 clock-icon" 
+                    onClick={() => snoozeTask(inProgressTask.id)}
+                    title="Snooze this task for 30 minutes"
+                  />
                 </div>
               </div>
               
