@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Scale, Copy, Minus, Plus, Trash2 } from 'lucide-react';
@@ -8,9 +7,10 @@ import { Card } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 
 const OrderDetailsPage = () => {
+  const { toast } = useToast();
   const { taskId, orderId } = useParams<{ taskId: string; orderId: string }>();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
@@ -54,7 +54,11 @@ const OrderDetailsPage = () => {
   
   const handleCopyId = () => {
     navigator.clipboard.writeText(orderData.id);
-    toast.success("Order ID copied to clipboard");
+    toast({
+      title: "Success",
+      description: "Order ID copied to clipboard",
+      duration: 3000,
+    });
   };
   
   const handleEditItem = (sectionId: string, itemId: number) => {
@@ -93,7 +97,11 @@ const OrderDetailsPage = () => {
     
     setIsEditModalOpen(false);
     setCurrentEditItem(null);
-    toast.success("Item updated successfully");
+    toast({
+      title: "Success",
+      description: "Item updated successfully",
+      duration: 3000,
+    });
   };
   
   const handleDeleteItem = () => {
@@ -113,7 +121,11 @@ const OrderDetailsPage = () => {
     
     setIsEditModalOpen(false);
     setCurrentEditItem(null);
-    toast.success("Item deleted successfully");
+    toast({
+      title: "Success",
+      description: "Item deleted successfully",
+      duration: 3000,
+    });
   };
   
   const handleOpenAddItemModal = () => {
@@ -123,7 +135,12 @@ const OrderDetailsPage = () => {
   
   const handleAddNewItem = () => {
     if (newItem.name.trim() === '') {
-      toast.error("Please enter a clothing item name");
+      toast({
+        title: "Error",
+        description: "Please enter a clothing item name",
+        variant: "destructive",
+        duration: 3000,
+      });
       return;
     }
     
@@ -142,7 +159,11 @@ const OrderDetailsPage = () => {
     setIsAddModalOpen(false);
     setNewItem({name: '', quantity: 1});
     setHasChanges(true); // Ensure changes are tracked
-    toast.success("New item added successfully");
+    toast({
+      title: "Success",
+      description: "New item added successfully",
+      duration: 3000,
+    });
   };
   
   const handleRequestSackEdit = () => {
@@ -152,7 +173,11 @@ const OrderDetailsPage = () => {
       setHasRequestedEdit(true);
       setIsEditing(true);
       setIsSaving(false);
-      toast.success("Sack edit requested. You can now modify the items.");
+      toast({
+        title: "Success",
+        description: "Sack edit requested. You can now modify the items.",
+        duration: 3000,
+      });
     }, 1000);
   };
   
@@ -160,6 +185,9 @@ const OrderDetailsPage = () => {
     setIsSaving(true);
     
     setTimeout(() => {
+      // Calculate total items
+      const totalItems = orderData.washAndFold.reduce((total, item) => total + item.quantity, 0);
+      
       // Update actual weight in order data
       setOrderData(prev => ({
         ...prev,
@@ -170,7 +198,13 @@ const OrderDetailsPage = () => {
       setIsEditing(false);
       setIsSaving(false);
       setHasChanges(false);
-      toast.success("Changes saved successfully");
+      
+      // Show toast with saved information
+      toast({
+        title: "Order Updated",
+        description: `Actual weight: ${actualWeight} Kg, Total items: ${totalItems}`,
+        duration: 5000, // 5 seconds
+      });
       
       // Instead of navigating away, stay on the same page to show saved values
       // navigate(`/tasks/${taskId}`);
@@ -309,7 +343,7 @@ const OrderDetailsPage = () => {
               className="text-blue-500 w-full justify-start mb-4"
               onClick={handleOpenAddItemModal}
             >
-              Add items (+)
+              Add items
             </Button>
             
             <Separator className="mb-4" />
