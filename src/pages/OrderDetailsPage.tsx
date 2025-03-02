@@ -25,6 +25,7 @@ const OrderDetailsPage = () => {
   const [actualWeight, setActualWeight] = useState<string>('');
   const [hasChanges, setHasChanges] = useState(false);
   const [requestOrderId, setRequestOrderId] = useState('');
+  const [validationError, setValidationError] = useState('');
   
   const [orderData, setOrderData] = useState({
     id: orderId || "1234P",
@@ -194,6 +195,20 @@ const OrderDetailsPage = () => {
   };
   
   const handleSaveChanges = () => {
+    // Validate actual weight is entered
+    if (!actualWeight || actualWeight.trim() === '') {
+      setValidationError('Please enter the actual weight');
+      toast({
+        title: "Error",
+        description: "Please enter the actual weight",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+    
+    // Clear any validation errors
+    setValidationError('');
     setIsSaving(true);
     
     setTimeout(() => {
@@ -216,6 +231,18 @@ const OrderDetailsPage = () => {
   };
   
   const handleCompletePickup = () => {
+    // Validate actual weight is entered
+    if (!actualWeight && !orderData.actualWeight) {
+      setValidationError('Please enter the actual weight');
+      toast({
+        title: "Error",
+        description: "Please enter the actual weight before completing pickup",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+    
     setIsSaving(true);
     
     setTimeout(() => {
@@ -267,6 +294,10 @@ const OrderDetailsPage = () => {
 
   const handleActualWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setActualWeight(e.target.value);
+    // Clear validation error when user enters a value
+    if (e.target.value.trim() !== '') {
+      setValidationError('');
+    }
   };
   
   return (
@@ -299,7 +330,9 @@ const OrderDetailsPage = () => {
             </div>
             
             <div className="flex justify-between items-center mb-4">
-              <span className="text-gray-700">Actual weight</span>
+              <span className="text-gray-700">
+                Actual weight<span className="text-red-500 ml-1">*</span>
+              </span>
               <div className="flex items-center">
                 <Input 
                   value={actualWeight} 
@@ -308,11 +341,18 @@ const OrderDetailsPage = () => {
                   type="number"
                   step="0.1"
                   min="0"
-                  className="w-20 mr-2"
+                  className={`w-20 mr-2 ${validationError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                  required
                 />
                 <span className="font-medium">Kg</span>
               </div>
             </div>
+            
+            {validationError && (
+              <div className="text-red-500 text-sm mb-4">
+                {validationError}
+              </div>
+            )}
             
             {orderData.savedChanges && orderData.actualWeight && (
               <div className="bg-green-50 p-4 rounded-md border border-green-200 mb-4">
