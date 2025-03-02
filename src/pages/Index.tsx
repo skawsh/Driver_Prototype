@@ -39,7 +39,7 @@ const initialTasks: Task[] = [
         location: {
           latitude: 17.4100,
           longitude: 78.4600,
-          address: "123 Jubilee Hills, Hyderabad, Telangana 500033"
+          address: "task1-pickup: 123 Jubilee Hills, Hyderabad, Telangana 500033"
         }
       },
       {
@@ -69,7 +69,7 @@ const initialTasks: Task[] = [
         location: {
           latitude: 17.4400,
           longitude: 78.4800,
-          address: "456 Banjara Hills, Hyderabad, Telangana 500034"
+          address: "task2-pickup: 456 Banjara Hills, Hyderabad, Telangana 500034"
         }
       },
       {
@@ -96,7 +96,11 @@ const initialTasks: Task[] = [
         enabled: true,
         customerName: "Laundry Express",
         mobileNumber: "+91 76543 21098",
-        location: studioLocation
+        location: {
+          latitude: 17.4200,
+          longitude: 78.4700,
+          address: "task3-collect: Laundry Express Studio, HITEC City, Hyderabad"
+        }
       },
       {
         id: "task3-delivery",
@@ -126,7 +130,11 @@ const initialTasks: Task[] = [
         enabled: true,
         customerName: "Clean & Fresh",
         mobileNumber: "+91 65432 10987",
-        location: studioLocation
+        location: {
+          latitude: 17.4300,
+          longitude: 78.4900,
+          address: "task4-collect: Clean & Fresh Studio, HITEC City, Hyderabad"
+        }
       },
       {
         id: "task4-delivery",
@@ -159,7 +167,7 @@ const initialTasks: Task[] = [
         location: {
           latitude: 17.4350,
           longitude: 78.4900,
-          address: "567 Kukatpally, Hyderabad, Telangana 500072"
+          address: "task5-pickup: 567 Kukatpally, Hyderabad, Telangana 500072"
         }
       },
       {
