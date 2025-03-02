@@ -228,7 +228,6 @@ const Index = () => {
     }
   }, [activeSubtasks.length, inProgressTask]);
   
-  // Filter tasks based on selected wash type
   const filteredTasks = tasks.filter(task => {
     if (selectedWashType === 'express') {
       return task.washType === 'express' || task.washType === 'both';
@@ -694,7 +693,6 @@ const Index = () => {
     );
   };
   
-  // Render a task card for the Express and Standard sections
   const renderTaskCard = (subtask: SubTask, parentTask: Task, index: number) => {
     const isClosest = isClosestSubtask(subtask.id);
     
@@ -812,24 +810,22 @@ const Index = () => {
     );
   };
   
-  // New section for side-by-side Express and Standard orders
   const renderSideBySideOrders = () => {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Express Orders Card */}
-        <Card 
-          className={`cursor-pointer transition hover:border-amber-300 ${selectedWashType === 'express' ? 'border-amber-400 shadow-md' : ''}`}
-          onClick={() => setSelectedWashType('express')}
-        >
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-amber-500" />
-              <h2 className="text-xl font-semibold">Express Orders ({expressOrders.length})</h2>
-            </div>
-            <p className="text-sm text-muted-foreground">High priority orders</p>
-          </CardHeader>
-          <CardContent>
-            {selectedWashType === 'express' ? (
+      <div className="grid grid-cols-1 gap-6">
+        {selectedWashType === 'express' ? (
+          <Card 
+            className="cursor-pointer transition border-amber-400 shadow-md"
+            onClick={() => setSelectedWashType('express')}
+          >
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-amber-500" />
+                <h2 className="text-xl font-semibold">Express Orders ({expressOrders.length})</h2>
+              </div>
+              <p className="text-sm text-muted-foreground">High priority orders</p>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-4">
                 {expressSubtasks.length > 0 ? (
                   expressSubtasks.map((subtask, index) => {
@@ -843,28 +839,21 @@ const Index = () => {
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="p-4 text-center">
-                <p className="text-amber-600 font-medium">Click to view {expressSubtasks.length} express tasks</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card 
+            className="cursor-pointer transition border-blue-400 shadow-md"
+            onClick={() => setSelectedWashType('standard')}
+          >
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Timer className="h-5 w-5 text-blue-500" />
+                <h2 className="text-xl font-semibold">Standard Orders ({standardOrders.length})</h2>
               </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        {/* Standard Orders Card */}
-        <Card 
-          className={`cursor-pointer transition hover:border-blue-300 ${selectedWashType === 'standard' ? 'border-blue-400 shadow-md' : ''}`}
-          onClick={() => setSelectedWashType('standard')}
-        >
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <Timer className="h-5 w-5 text-blue-500" />
-              <h2 className="text-xl font-semibold">Standard Orders ({standardOrders.length})</h2>
-            </div>
-            <p className="text-sm text-muted-foreground">Regular priority orders</p>
-          </CardHeader>
-          <CardContent>
-            {selectedWashType === 'standard' ? (
+              <p className="text-sm text-muted-foreground">Regular priority orders</p>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-4">
                 {standardSubtasks.length > 0 ? (
                   standardSubtasks.map((subtask, index) => {
@@ -878,13 +867,9 @@ const Index = () => {
                   </div>
                 )}
               </div>
-            ) : (
-              <div className="p-4 text-center">
-                <p className="text-blue-600 font-medium">Click to view {standardSubtasks.length} standard tasks</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
       </div>
     );
   };
@@ -934,7 +919,6 @@ const Index = () => {
         </Card>
       ) : (
         <div className="space-y-8">
-          {/* Filter buttons - showing only Express and Standard options */}
           <div className="flex flex-wrap gap-3 mb-2">
             <Button 
               variant={selectedWashType === 'express' ? "default" : "outline"}
@@ -954,7 +938,6 @@ const Index = () => {
             </Button>
           </div>
           
-          {/* Always show side by side cards since there's no "all" option anymore */}
           {renderSideBySideOrders()}
         </div>
       )}
