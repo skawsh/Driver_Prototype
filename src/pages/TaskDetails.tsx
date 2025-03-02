@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Phone, AlertCircle, Clock, WashingMachine } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, AlertCircle, Clock, WashingMachine, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -131,10 +131,14 @@ const TaskDetails = () => {
             <div className="flex items-center">
               <MapPin className="h-4 w-4 text-blue-500 mr-1" />
               <span className="text-blue-500 font-medium">{task.distance} Km</span>
-              <Clock 
-                className="h-5 w-5 text-blue-500 ml-3 cursor-pointer hover:text-blue-700"
+              <div 
+                className="flex items-center bg-blue-100 text-blue-600 rounded-full p-1.5 ml-3 cursor-pointer hover:bg-blue-200 transition-colors"
                 onClick={handleSnooze}
-              />
+                title="Snooze this task"
+              >
+                <Clock className="h-4 w-4" />
+                <span className="text-xs font-medium ml-1 mr-1">Snooze</span>
+              </div>
             </div>
           </div>
           
