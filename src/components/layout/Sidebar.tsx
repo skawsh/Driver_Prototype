@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { List, User, Settings, Archive, ChevronLeft, Menu } from 'lucide-react';
+import { List, User, Settings, Archive, Menu } from 'lucide-react';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 
 interface NavItemProps {
@@ -50,25 +49,21 @@ export const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
   const { setOpenMobile, openMobile } = useSidebar();
   
-  // Toggle desktop sidebar
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
   
-  // Close mobile sidebar when route changes
   const location = useLocation();
   useEffect(() => {
     setOpenMobile(false);
   }, [location, setOpenMobile]);
   
-  // Handle closing mobile sidebar
   const closeMobileSidebar = () => {
     setOpenMobile(false);
   };
   
   return (
     <>
-      {/* Mobile Header with Menu */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background border-b px-4 py-3 flex items-center justify-between">
         <div className="flex items-center">
           <SidebarTrigger>
@@ -78,7 +73,6 @@ export const Sidebar = () => {
         </div>
       </div>
       
-      {/* Desktop Sidebar */}
       <aside className={cn(
         "h-screen bg-sidebar fixed left-0 top-0 z-50 hidden lg:flex flex-col border-r transition-all duration-300 ease-in-out",
         isOpen ? "w-64" : "w-16"
@@ -95,9 +89,8 @@ export const Sidebar = () => {
             className="p-1 rounded-md hover:bg-secondary transition-all duration-300"
             aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
           >
-            <ChevronLeft className={cn(
-              "h-5 w-5 transition-all duration-300",
-              !isOpen && "rotate-180"
+            <Menu className={cn(
+              "h-5 w-5 transition-all duration-300"
             )} />
           </button>
         </div>
@@ -130,7 +123,6 @@ export const Sidebar = () => {
         </nav>
       </aside>
       
-      {/* Mobile Navigation Drawer */}
       <div className="lg:hidden">
         <div className="fixed inset-0 z-40 flex pointer-events-none">
           <div className={cn(
@@ -142,7 +134,7 @@ export const Sidebar = () => {
               <div className="p-4 border-b flex items-center justify-between h-16">
                 <h1 className="font-semibold text-lg">Driver Panel</h1>
                 <SidebarTrigger>
-                  <ChevronLeft className="h-5 w-5" />
+                  <Menu className="h-5 w-5" />
                 </SidebarTrigger>
               </div>
               
@@ -179,7 +171,6 @@ export const Sidebar = () => {
             </div>
           </div>
           
-          {/* Overlay for closing the sidebar */}
           <div 
             className={cn(
               "fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity duration-300",

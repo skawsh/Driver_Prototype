@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,31 +5,47 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Clock, MapPin, Package, User } from 'lucide-react';
 
-// Mock data for assigned orders
+// Mock data for assigned orders with Hyderabad addresses
 const assignedOrders = [
   {
     id: '1234',
-    customerName: 'John Smith',
-    address: '123 Main St, San Francisco, CA',
+    customerName: 'Raj Sharma',
+    address: '123 Jubilee Hills, Hyderabad, Telangana 500033',
     items: 3,
     estimatedTime: '30 min',
     status: 'Ready for pickup',
   },
   {
     id: '5678',
-    customerName: 'Sarah Johnson',
-    address: '456 Market St, San Francisco, CA',
+    customerName: 'Priya Patel',
+    address: '456 Banjara Hills, Hyderabad, Telangana 500034',
     items: 2,
     estimatedTime: '45 min',
     status: 'Preparing',
   },
   {
     id: '9012',
-    customerName: 'Michael Brown',
-    address: '789 Mission St, San Francisco, CA',
+    customerName: 'Arjun Reddy',
+    address: '789 Gachibowli, Hyderabad, Telangana 500032',
     items: 1,
     estimatedTime: '15 min',
     status: 'Ready for pickup',
+  },
+  {
+    id: '3456',
+    customerName: 'Lakshmi Devi',
+    address: '234 Madhapur, HITEC City, Hyderabad, Telangana 500081',
+    items: 4,
+    estimatedTime: '25 min',
+    status: 'Ready for pickup',
+  },
+  {
+    id: '7890',
+    customerName: 'Vikram Singh',
+    address: '567 Kukatpally, Hyderabad, Telangana 500072',
+    items: 2,
+    estimatedTime: '40 min',
+    status: 'Preparing',
   }
 ];
 
