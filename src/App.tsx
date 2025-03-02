@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +14,7 @@ import TaskDetails from "./pages/TaskDetails";
 import TaskSuccessPage from "./pages/TaskSuccessPage";
 import OrderDetailsPage from "./pages/OrderDetailsPage";
 import ReportIssuePage from "./pages/ReportIssuePage";
+import SnoozePage from "./pages/SnoozePage";
 
 const PageNumber = () => {
   const location = useLocation();
@@ -64,6 +66,7 @@ const AppRoutes = () => (
         <Route path="/task-success/:taskId/:orderId" element={<TaskSuccessPage />} />
         <Route path="/order-details/:taskId/:orderId" element={<OrderDetailsPage />} />
         <Route path="/report-issue/:taskId/:orderId" element={<ReportIssuePage />} />
+        <Route path="/snooze/:taskId/:orderId" element={<SnoozePage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
