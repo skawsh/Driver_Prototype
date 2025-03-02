@@ -41,7 +41,6 @@ const OrderDetailsPage = () => {
     savedChanges: false
   });
 
-  // Track changes to enable save button
   useEffect(() => {
     if (actualWeight !== orderData.actualWeight || isEditing) {
       setHasChanges(true);
@@ -158,7 +157,7 @@ const OrderDetailsPage = () => {
     
     setIsAddModalOpen(false);
     setNewItem({name: '', quantity: 1});
-    setHasChanges(true); // Ensure changes are tracked
+    setHasChanges(true);
     toast({
       title: "Success",
       description: "New item added successfully",
@@ -185,10 +184,6 @@ const OrderDetailsPage = () => {
     setIsSaving(true);
     
     setTimeout(() => {
-      // Calculate total items
-      const totalItems = orderData.washAndFold.reduce((total, item) => total + item.quantity, 0);
-      
-      // Update actual weight in order data
       setOrderData(prev => ({
         ...prev,
         actualWeight: actualWeight,
@@ -199,15 +194,11 @@ const OrderDetailsPage = () => {
       setIsSaving(false);
       setHasChanges(false);
       
-      // Show toast with saved information
       toast({
         title: "Order Updated",
-        description: `Actual weight: ${actualWeight} Kg, Total items: ${totalItems}`,
-        duration: 5000, // 5 seconds
+        description: `Actual weight: ${actualWeight} Kg`,
+        duration: 5000,
       });
-      
-      // Instead of navigating away, stay on the same page to show saved values
-      // navigate(`/tasks/${taskId}`);
     }, 1500);
   };
   
@@ -298,15 +289,9 @@ const OrderDetailsPage = () => {
             {orderData.savedChanges && orderData.actualWeight && (
               <div className="bg-green-50 p-4 rounded-md border border-green-200 mb-4">
                 <h3 className="font-medium text-green-700 mb-2">Saved Information</h3>
-                <div className="flex justify-between items-center mb-2">
+                <div className="flex justify-between items-center">
                   <span className="text-gray-700">Actual weight recorded</span>
                   <span className="font-medium">{orderData.actualWeight} Kg</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-700">Total items</span>
-                  <span className="font-medium">
-                    {orderData.washAndFold.reduce((total, item) => total + item.quantity, 0)}
-                  </span>
                 </div>
               </div>
             )}
@@ -390,7 +375,6 @@ const OrderDetailsPage = () => {
         </div>
       </div>
       
-      {/* Edit Item Modal */}
       <Sheet open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <SheetContent>
           <SheetHeader>
@@ -458,7 +442,6 @@ const OrderDetailsPage = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Add Item Modal */}
       <Sheet open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
         <SheetContent>
           <SheetHeader>
