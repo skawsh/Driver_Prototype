@@ -21,7 +21,6 @@ const TaskDetails = () => {
   const [actualWeight, setActualWeight] = useState<string>('');
   const [hasChanges, setHasChanges] = useState<boolean>(false);
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
-  const [editingCategory, setEditingCategory] = useState<'wash' | 'dry'>('wash');
   const [editingItem, setEditingItem] = useState<ClothingItem | null>(null);
   const [newItemName, setNewItemName] = useState<string>('');
   const [newItemQuantity, setNewItemQuantity] = useState<string>('1');
@@ -57,16 +56,14 @@ const TaskDetails = () => {
     });
   };
   
-  const openAddItemSheet = (category: 'wash' | 'dry') => {
-    setEditingCategory(category);
+  const openAddItemSheet = () => {
     setEditingItem(null);
     setNewItemName('');
     setNewItemQuantity('1');
     setIsSheetOpen(true);
   };
 
-  const openEditItemSheet = (item: ClothingItem, category: 'wash' | 'dry') => {
-    setEditingCategory(category);
+  const openEditItemSheet = (item: ClothingItem) => {
     setEditingItem(item);
     setNewItemName(item.name);
     setNewItemQuantity(item.quantity.toString());
@@ -83,28 +80,16 @@ const TaskDetails = () => {
     
     if (editingItem) {
       // Editing existing item
-      if (editingCategory === 'wash') {
-        setWashAndFoldItems(prev => 
-          prev.map(item => 
-            item === editingItem ? { name: newItemName, quantity } : item
-          )
-        );
-      } else {
-        setDryCleaningItems(prev => 
-          prev.map(item => 
-            item === editingItem ? { name: newItemName, quantity } : item
-          )
-        );
-      }
+      setWashAndFoldItems(prev => 
+        prev.map(item => 
+          item === editingItem ? { name: newItemName, quantity } : item
+        )
+      );
       toast.success("Item updated successfully");
     } else {
       // Adding new item
       const newItem = { name: newItemName, quantity };
-      if (editingCategory === 'wash') {
-        setWashAndFoldItems(prev => [...prev, newItem]);
-      } else {
-        setDryCleaningItems(prev => [...prev, newItem]);
-      }
+      setWashAndFoldItems(prev => [...prev, newItem]);
       toast.success("New item added successfully");
     }
 
@@ -112,18 +97,14 @@ const TaskDetails = () => {
     setHasChanges(true);
   };
 
-  const handleDeleteItem = (item: ClothingItem, category: 'wash' | 'dry') => {
-    if (category === 'wash') {
-      setWashAndFoldItems(prev => prev.filter(i => i !== item));
-    } else {
-      setDryCleaningItems(prev => prev.filter(i => i !== item));
-    }
+  const handleDeleteItem = (item: ClothingItem) => {
+    setWashAndFoldItems(prev => prev.filter(i => i !== item));
     toast.success("Item removed successfully");
     setHasChanges(true);
   };
 
-  const handleAddItems = (category: 'wash' | 'dry') => {
-    openAddItemSheet(category);
+  const handleAddItems = () => {
+    openAddItemSheet();
   };
 
   const handleSaveChanges = () => {
@@ -196,7 +177,7 @@ const TaskDetails = () => {
                   variant="ghost" 
                   size="icon" 
                   className="h-6 w-6 p-0" 
-                  onClick={() => openEditItemSheet(item, 'wash')}
+                  onClick={() => openEditItemSheet(item)}
                 >
                   <span className="text-xs">Edit</span>
                 </Button>
@@ -206,7 +187,7 @@ const TaskDetails = () => {
         </ul>
         
         <button 
-          onClick={() => handleAddItems('wash')}
+          onClick={handleAddItems}
           className="text-left text-blue-600 font-semibold mb-4 flex items-center"
         >
           Add or edit items (+)
@@ -220,27 +201,14 @@ const TaskDetails = () => {
             <li key={`dry-${index}`} className="grid grid-cols-6 mb-1 items-center">
               <div className="col-span-1">{index + 1}.</div>
               <div className="col-span-3 text-left">{item.name}</div>
-              <div className="col-span-1">X {item.quantity}</div>
-              <div className="col-span-1 flex justify-end">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-6 w-6 p-0" 
-                  onClick={() => openEditItemSheet(item, 'dry')}
-                >
-                  <span className="text-xs">Edit</span>
-                </Button>
-              </div>
+              <div className="col-span-2 text-center">X {item.quantity}</div>
             </li>
           ))}
         </ul>
         
-        <button 
-          onClick={() => handleAddItems('dry')}
-          className="text-left text-blue-600 font-semibold mb-4 flex items-center"
-        >
-          Add or edit items (+)
-        </button>
+        <div className="mt-2 text-sm text-gray-500 text-center italic">
+          Dry cleaning items can only be modified by admins
+        </div>
       </div>
       
       {/* Footer with buttons */}
@@ -293,7 +261,7 @@ const TaskDetails = () => {
                     <Button 
                       variant="destructive" 
                       onClick={() => {
-                        handleDeleteItem(editingItem, editingCategory);
+                        handleDeleteItem(editingItem);
                         setIsSheetOpen(false);
                       }}
                     >
