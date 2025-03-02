@@ -131,6 +131,7 @@ const TaskDetails = () => {
           variant="ghost" 
           className="p-0 h-auto mr-2" 
           onClick={handleGoBack}
+          aria-label="Go back"
         >
           <ArrowLeft className="h-6 w-6 text-black" />
         </Button>
