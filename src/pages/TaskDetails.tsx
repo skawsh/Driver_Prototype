@@ -33,8 +33,8 @@ const mockTasks: Record<string, Task> = {
         type: "drop",
         status: "pending",
         enabled: false,
-        customerName: "Raj Sharma",
-        mobileNumber: "+91 98765 43210",
+        customerName: "Saiteja",
+        mobileNumber: "8197739892",
         location: {
           latitude: 17.4100,
           longitude: 78.5000,
