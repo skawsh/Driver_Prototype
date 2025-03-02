@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Scale, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -117,6 +118,10 @@ const TaskDetails = () => {
   const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setActualWeight(e.target.value);
     setHasChanges(true);
+  };
+  
+  const handleCloseSheet = () => {
+    setIsSheetOpen(false);
   };
   
   return (
@@ -270,6 +275,16 @@ const TaskDetails = () => {
               </div>
             </Card>
           </div>
+          <SheetFooter className="pt-2">
+            <Button 
+              variant="outline" 
+              onClick={handleCloseSheet}
+              className="w-full"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
     </div>
