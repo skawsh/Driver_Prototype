@@ -16,21 +16,22 @@ const TaskDetails = () => {
   const navigate = useNavigate();
   const { taskId, orderId } = useParams();
   const [actualWeight, setActualWeight] = useState<string>('');
+  const [hasChanges, setHasChanges] = useState<boolean>(false);
   
   // Sample data for demonstration
   const estimatedWeight = 2.5;
-  const washAndFoldItems: ClothingItem[] = [
+  const [washAndFoldItems, setWashAndFoldItems] = useState<ClothingItem[]>([
     { name: 'Shirt', quantity: 1 },
     { name: 'pant', quantity: 2 },
     { name: 'Saree', quantity: 2 },
     { name: 'T-Shirt', quantity: 3 }
-  ];
+  ]);
   
-  const dryCleaningItems: ClothingItem[] = [
+  const [dryCleaningItems, setDryCleaningItems] = useState<ClothingItem[]>([
     { name: 'Coat', quantity: 1 },
     { name: 'Dress', quantity: 2 },
     { name: 'Jacket', quantity: 1 }
-  ];
+  ]);
   
   const handleGoBack = () => {
     navigate(-1);
@@ -46,20 +47,39 @@ const TaskDetails = () => {
     toast.info("Add items functionality", {
       description: "This would open an item editor in a real app",
     });
+    setHasChanges(true);
+  };
+
+  const handleSaveChanges = () => {
+    if (actualWeight || hasChanges) {
+      toast.success("Changes saved successfully", {
+        description: `Actual weight: ${actualWeight || "Not specified"} kg`,
+      });
+      setHasChanges(false);
+    } else {
+      toast.info("No changes to save", {
+        description: "Please make changes before saving",
+      });
+    }
+  };
+  
+  const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setActualWeight(e.target.value);
+    setHasChanges(true);
   };
   
   return (
     <div className="bg-blue-100 min-h-screen p-4 flex flex-col">
-      {/* Header with back button */}
-      <div className="flex justify-between items-center mb-4">
+      {/* Header with back button and order ID */}
+      <div className="flex items-center mb-4">
         <Button 
           variant="ghost" 
-          className="p-0 h-auto" 
+          className="p-0 h-auto mr-2" 
           onClick={handleGoBack}
         >
           <ArrowLeft className="h-6 w-6 text-black" />
         </Button>
-        <div className="text-lg font-bold text-right">ID {orderId || '123456'}P</div>
+        <div className="text-lg font-bold">ID {orderId || '123456'}P</div>
       </div>
       
       {/* Main content */}
@@ -80,7 +100,7 @@ const TaskDetails = () => {
               className="w-20 h-8 text-right p-1 border-b-2 border-t-0 border-x-0 rounded-none focus:ring-0" 
               placeholder="___"
               value={actualWeight}
-              onChange={(e) => setActualWeight(e.target.value)}
+              onChange={handleWeightChange}
             />
             <span className="ml-1">Kg</span>
           </div>
@@ -120,13 +140,20 @@ const TaskDetails = () => {
         </ul>
       </div>
       
-      {/* Bottom Button */}
-      <div className="mt-4 flex justify-center">
+      {/* Footer with buttons */}
+      <div className="mt-4 flex justify-center gap-4">
         <Button 
           className="bg-green-300 text-black font-semibold rounded-md px-8 py-2 hover:bg-green-400"
           onClick={handleRequestSackEdit}
         >
           Request sack edit
+        </Button>
+        
+        <Button 
+          className="bg-blue-500 text-white font-semibold rounded-md px-8 py-2 hover:bg-blue-600"
+          onClick={handleSaveChanges}
+        >
+          Save changes
         </Button>
       </div>
     </div>
