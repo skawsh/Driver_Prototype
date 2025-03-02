@@ -85,6 +85,10 @@ const TaskDetails = () => {
     }, 1500);
   };
 
+  const handleSnooze = () => {
+    navigate(`/snooze/${taskId}/${parentTask?.orderNumber || orderId}`);
+  };
+
   if (loading) {
     return (
       <div className="h-screen w-full flex items-center justify-center">
@@ -127,7 +131,10 @@ const TaskDetails = () => {
             <div className="flex items-center">
               <MapPin className="h-4 w-4 text-blue-500 mr-1" />
               <span className="text-blue-500 font-medium">{task.distance} Km</span>
-              <Clock className="h-5 w-5 text-gray-400 ml-3" />
+              <Clock 
+                className="h-5 w-5 text-blue-500 ml-3 cursor-pointer hover:text-blue-700"
+                onClick={handleSnooze}
+              />
             </div>
           </div>
           
