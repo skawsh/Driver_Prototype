@@ -107,7 +107,6 @@ export const completeSubtask = (tasks: Task[], subtaskId: string): {
   }
   
   // After completing a subtask, check if we need to enable any snoozed tasks
-  // Check localStorage for snoozed tasks
   const snoozeInfoStr = localStorage.getItem('snoozeInfo');
   if (snoozeInfoStr) {
     const snoozeInfo = JSON.parse(snoozeInfoStr);
@@ -134,6 +133,9 @@ export const completeSubtask = (tasks: Task[], subtaskId: string): {
             break;
           }
         }
+        
+        // Clear the snooze info as we've now enabled the task
+        localStorage.removeItem('snoozeInfo');
       }
     }
   }

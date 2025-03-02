@@ -90,14 +90,12 @@ const OrderCategorySection = ({
           {/* Display snoozed tasks after non-snoozed tasks */}
           {snoozedSubtasks.length > 0 && (
             <>
-              {snoozedUntilLast && (
-                <div className="pt-2 pb-2">
-                  <p className="text-sm text-amber-500 font-medium flex items-center">
-                    <AlarmClock className="h-3 w-3 mr-1" />
-                    Snoozed orders (will be enabled after all others are completed)
-                  </p>
-                </div>
-              )}
+              <div className="pt-2 pb-2">
+                <p className="text-sm text-amber-500 font-medium flex items-center">
+                  <AlarmClock className="h-3 w-3 mr-1" />
+                  Snoozed orders (will be enabled after all others are completed)
+                </p>
+              </div>
               
               {snoozedSubtasks.map((subtask, index) => {
                 const parentTask = tasks.find(task => task.subtasks.some(st => st.id === subtask.id));
