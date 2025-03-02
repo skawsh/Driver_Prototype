@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { CheckCircle, Clock, MapPin, Package, User, Phone, WashingMachine, Route, AlertCircle, X, ArrowLeft, Eye, Zap, Timer } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Eye } from 'lucide-react';
 import { Task, SubTask, Location, DriverState } from '@/types/task';
-import { calculateDistance, sortSubtasksByDistance, getClosestSubtask } from '@/utils/distance';
 import { toast } from 'sonner';
+
+import OrderTypeSelector from '@/components/orders/OrderTypeSelector';
+import SnoozeNotification from '@/components/orders/SnoozeNotification';
+import AllTasksCompleted from '@/components/orders/AllTasksCompleted';
+import OrderCategorySection from '@/components/orders/OrderCategorySection';
+import ActiveTaskCard from '@/components/orders/ActiveTaskCard';
+import LocationReachedCard from '@/components/orders/LocationReachedCard';
+import CompletedTasksList from '@/components/orders/CompletedTasksList';
+
+import { 
+  getActiveSubtasks, 
+  markClosestSubtask, 
+  filterSubtasksByWashType,
+  completeSubtask
+} from '@/utils/taskUtils';
 
 const initialDriverState: DriverState = {
   currentLocation: {
@@ -220,76 +231,23 @@ const Index = () => {
     setSnoozedUntilLast(false);
   };
   
-  const getActiveSubtasks = () => {
-    const activeSubtasks: SubTask[] = [];
-    
-    tasks.forEach(task => {
-      task.subtasks.forEach(subtask => {
-        if (subtask.enabled && subtask.status !== 'completed') {
-          const distance = calculateDistance(driverState.currentLocation, subtask.location);
-          activeSubtasks.push({
-            ...subtask,
-            distance: distance
-          });
-        }
-      });
-    });
-    
-    return sortSubtasksByDistance(activeSubtasks, driverState.currentLocation);
-  };
+  const activeSubtasks = getActiveSubtasks(tasks, driverState);
   
-  const activeSubtasks = getActiveSubtasks();
-  const closestSubtask = getClosestSubtask(activeSubtasks);
+  const processedSubtasks = markClosestSubtask(activeSubtasks, snoozedTasks, snoozedUntilLast, tasks);
   
-  useEffect(() => {
-    if (closestSubtask && activeSubtasks.length > 0 && !inProgressTask) {
-      setActiveTaskId(closestSubtask.id);
-    }
-  }, [activeSubtasks.length, inProgressTask]);
-  
-  const filteredTasks = tasks.filter(task => {
-    if (selectedWashType === 'express') {
-      return task.washType === 'express' || task.washType === 'both';
-    } else {
-      return task.washType === 'standard';
-    }
-  });
+  const expressSubtasks = filterSubtasksByWashType(processedSubtasks, tasks, 'express');
+  const standardSubtasks = filterSubtasksByWashType(processedSubtasks, tasks, 'standard');
   
   const expressOrders = tasks.filter(task => task.washType === 'express' || task.washType === 'both');
   const standardOrders = tasks.filter(task => task.washType === 'standard');
   
-  const filteredActiveSubtasks = activeSubtasks.filter(subtask => {
-    if (snoozedTasks.length === 0 && !snoozedUntilLast) {
-      return true;
-    }
-    
-    if (snoozedTasks.includes(subtask.id)) {
-      return false;
-    }
-    
-    if (snoozedUntilLast) {
-      const parentTask = tasks.find(task => 
-        task.subtasks.some(st => st.id === subtask.id)
-      );
-      
-      if (parentTask && tasks[tasks.length - 1].id === parentTask.id) {
-        return true;
-      }
-      return false;
-    }
-    
-    return true;
-  });
+  const closestSubtask = processedSubtasks.find(subtask => subtask.isClosest);
   
-  const expressSubtasks = filteredActiveSubtasks.filter(subtask => {
-    const parentTask = tasks.find(task => task.subtasks.some(st => st.id === subtask.id));
-    return parentTask && (parentTask.washType === 'express' || parentTask.washType === 'both');
-  });
-  
-  const standardSubtasks = filteredActiveSubtasks.filter(subtask => {
-    const parentTask = tasks.find(task => task.subtasks.some(st => st.id === subtask.id));
-    return parentTask && parentTask.washType === 'standard';
-  });
+  useEffect(() => {
+    if (closestSubtask && processedSubtasks.length > 0 && !inProgressTask) {
+      setActiveTaskId(closestSubtask.id);
+    }
+  }, [processedSubtasks.length, inProgressTask]);
   
   const startTask = (subtask: SubTask) => {
     const parentTask = tasks.find(
@@ -336,49 +294,34 @@ const Index = () => {
     }, 30 * 60 * 1000);
   }
   
-  const completeSubtask = (subtaskId: string) => {
-    const updatedTasks = [...tasks];
-    let taskCompleted = false;
-    let newLocation: Location | null = null;
-    
-    for (let i = 0; i < updatedTasks.length; i++) {
-      const task = updatedTasks[i];
-      const subtaskIndex = task.subtasks.findIndex(st => st.id === subtaskId);
-      
-      if (subtaskIndex !== -1) {
-        task.subtasks[subtaskIndex].status = 'completed';
-        newLocation = task.subtasks[subtaskIndex].location;
-        
-        if (subtaskIndex < task.subtasks.length - 1) {
-          task.subtasks[subtaskIndex + 1].enabled = true;
-          task.status = 'in-progress';
-        } else {
-          task.status = 'completed';
-          taskCompleted = true;
-          
-          const snoozeInfoStr = localStorage.getItem('snoozeInfo');
-          if (snoozeInfoStr) {
-            const snoozeInfo = JSON.parse(snoozeInfoStr);
-            if (snoozeInfo.snoozeType === 'next') {
-              clearSnooze();
-              toast.success("Snooze period ended!", {
-                description: "All tasks are now visible again",
-              });
-            }
-          }
-          
-          setCompletedTasks(prev => [...prev, task]);
-        }
-        break;
-      }
-    }
+  const handleCompleteSubtask = (subtaskId: string) => {
+    const { updatedTasks, taskCompleted, newLocation } = completeSubtask(tasks, subtaskId);
     
     if (taskCompleted) {
+      const taskToComplete = updatedTasks.find(
+        task => task.subtasks.some(st => st.id === subtaskId) && task.status === 'completed'
+      );
+      
+      if (taskToComplete) {
+        setCompletedTasks(prev => [...prev, taskToComplete]);
+      }
+      
       const filteredTasks = updatedTasks.filter(task => task.status !== 'completed');
       setTasks(filteredTasks);
       
       if (filteredTasks.length === 0 && snoozedUntilLast) {
         clearSnooze();
+      }
+      
+      const snoozeInfoStr = localStorage.getItem('snoozeInfo');
+      if (snoozeInfoStr) {
+        const snoozeInfo = JSON.parse(snoozeInfoStr);
+        if (snoozeInfo.snoozeType === 'next') {
+          clearSnooze();
+          toast.success("Snooze period ended!", {
+            description: "All tasks are now visible again",
+          });
+        }
       }
     } else {
       setTasks(updatedTasks);
@@ -403,554 +346,17 @@ const Index = () => {
     });
   };
   
-  const getSubtaskColor = (type: string) => {
-    switch (type) {
-      case 'pickup':
-        return 'bg-blue-500';
-      case 'drop':
-        return 'bg-indigo-500';
-      case 'collect':
-        return 'bg-green-500';
-      case 'delivery':
-        return 'bg-yellow-500';
-      default:
-        return 'bg-gray-500';
-    }
+  const resetAllTasks = () => {
+    setTasks(initialTasks);
+    setDriverState(initialDriverState);
+    setCompletedTasks([]);
+    clearSnooze();
+    toast.info("Tasks have been reset!");
   };
   
-  const getSubtaskBadgeVariant = (type: string): "default" | "secondary" | "outline" | "destructive" => {
-    switch (type) {
-      case 'pickup':
-        return 'secondary';
-      case 'drop':
-        return 'outline';
-      case 'collect':
-        return 'default';
-      case 'delivery':
-        return 'destructive';
-      default:
-        return 'default';
-    }
-  };
-  
-  const getSubtaskTypeName = (type: string) => {
-    switch (type) {
-      case 'pickup':
-        return 'Pick Up';
-      case 'drop':
-        return 'Drop';
-      case 'collect':
-        return 'Collect';
-      case 'delivery':
-        return 'Deliver';
-      default:
-        return type;
-    }
-  };
-  
-  const isClosestSubtask = (subtaskId: string) => {
-    return closestSubtask && closestSubtask.id === subtaskId;
-  };
-  
-  const viewDetails = (task: SubTask) => {
-    const parentTask = tasks.find(
-      t => t.subtasks.some(st => st.id === task.id)
-    );
-    
-    if (parentTask) {
-      navigate(`/task/${task.id}/${parentTask.orderNumber}`);
-    } else {
-      toast.info(`Viewing details for task ${task.id}`, {
-        description: "Full details would be shown in a modal in a real app",
-      });
-    }
-  };
-  
-  const renderLocationReachedTask = () => {
-    if (!locationReachedTask) return null;
-    
-    const parentTask = tasks.find(
-      task => task.subtasks.some(st => st.id === locationReachedTask.id)
-    );
-    
-    if (!parentTask) return null;
-    
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <Card className="overflow-hidden rounded-3xl border-2 border-primary shadow-lg">
-          <CardContent className="p-0">
-            <div className="p-4">
-              <div className="flex justify-between items-start mb-4">
-                <div className="text-lg font-semibold">
-                  ID {parentTask.orderNumber}P
-                </div>
-                <div className="distance-container">
-                  <div className="flex items-center text-sky-400 font-medium">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    {locationReachedTask.distance !== undefined ? locationReachedTask.distance : 0} Km
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center mb-4">
-                <WashingMachine className="h-5 w-5 mr-2" />
-                <span className="text-xl font-bold">{locationReachedTask.customerName}</span>
-              </div>
-              
-              <a 
-                href={`https://maps.google.com/?q=${locationReachedTask.location.latitude},${locationReachedTask.location.longitude}`} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-start space-x-2 mb-3 text-blue-500 hover:underline"
-              >
-                <MapPin className="h-5 w-5 text-blue-500 mt-0.5" />
-                <span className="break-all">{locationReachedTask.location.address}</span>
-              </a>
-              
-              {locationReachedTask.mobileNumber && (
-                <a 
-                  href={`tel:${locationReachedTask.mobileNumber}`}
-                  className="flex items-start space-x-2 mb-4 text-blue-500 hover:underline"
-                >
-                  <Phone className="h-5 w-5 text-blue-500 mt-0.5" />
-                  <span>{locationReachedTask.mobileNumber.replace(/\+91 /, '')}</span>
-                </a>
-              )}
-              
-              <div className="grid grid-cols-2 gap-3 mt-4">
-                <Button 
-                  variant="outline"
-                  className="rounded-xl bg-green-100 hover:bg-green-200"
-                  onClick={() => viewDetails(locationReachedTask)}
-                >
-                  View details
-                </Button>
-                
-                <Button 
-                  className="location-reached-button w-full h-12 text-lg font-semibold"
-                  onClick={() => completeSubtask(locationReachedTask.id)}
-                >
-                  Location reached
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  };
-  
-  const renderInProgressTask = () => {
-    if (!inProgressTask) return null;
-    
-    const parentTask = tasks.find(
-      task => task.subtasks.some(st => st.id === inProgressTask.id)
-    );
-    
-    if (!parentTask) return null;
-    
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <Card className="overflow-hidden rounded-3xl border-2 border-primary shadow-lg relative">
-          <CardContent className="p-0">
-            <div className="p-4">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center">
-                  <div className="text-lg font-semibold mr-2">
-                    ID {parentTask.orderNumber}P
-                  </div>
-                  <MapPin className="h-4 w-4 text-sky-400" />
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 p-0"
-                  onClick={cancelTask}
-                >
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-              
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <WashingMachine className="h-5 w-5 mr-2" />
-                  <span className="text-xl font-bold">{inProgressTask.customerName}</span>
-                </div>
-                <div className="flex items-center">
-                  <Clock 
-                    className="h-5 w-5 clock-icon mr-3" 
-                    onClick={() => snoozeTask(inProgressTask.id)}
-                    aria-label="Snooze this task for 30 minutes"
-                  />
-                  <div className="flex items-center text-sky-400 font-medium">
-                    <Route className="h-4 w-4 mr-1" />
-                    {inProgressTask.distance !== undefined ? inProgressTask.distance : 0} Km
-                  </div>
-                </div>
-              </div>
-              
-              <a 
-                href={`https://maps.google.com/?q=${inProgressTask.location.latitude},${inProgressTask.location.longitude}`} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-start space-x-2 mb-3 text-blue-500 hover:underline"
-              >
-                <MapPin className="h-5 w-5 text-blue-500 mt-0.5" />
-                <span className="break-all">{inProgressTask.location.address}</span>
-              </a>
-              
-              {inProgressTask.mobileNumber && (
-                <a 
-                  href={`tel:${inProgressTask.mobileNumber}`}
-                  className="flex items-start space-x-2 mb-4 text-blue-500 hover:underline"
-                >
-                  <Phone className="h-5 w-5 text-blue-500 mt-0.5" />
-                  <span>{inProgressTask.mobileNumber.replace(/\+91 /, '')}</span>
-                </a>
-              )}
-              
-              <div className="grid grid-cols-1 gap-3 mt-4">
-                <Button 
-                  variant="destructive"
-                  className="rounded-xl"
-                  onClick={reportIssue}
-                >
-                  Report issue
-                </Button>
-                
-                <Button 
-                  className="location-reached-button w-full h-12 text-lg font-semibold"
-                  onClick={locationReached}
-                >
-                  Location reached
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  };
-  
-  const renderCollectCard = (subtask: SubTask, parentTask: Task, index: number) => {
-    const isClosest = isClosestSubtask(subtask.id);
-    
-    return (
-      <motion.div
-        key={subtask.id}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: index * 0.1 }}
-      >
-        <Card className={`overflow-hidden rounded-3xl border ${isClosest ? 'border-green-500 shadow-md' : 'border-gray-200'} shadow-sm`}>
-          <CardContent className="p-0">
-            <div className="p-4">
-              <div className="flex justify-between items-start mb-4">
-                <div className="text-lg font-semibold">
-                  ID {parentTask.orderNumber}P
-                </div>
-                <div className="flex items-center text-sky-400 font-medium">
-                  <Route className="h-4 w-4 mr-1" />
-                  {subtask.distance !== undefined ? subtask.distance : 0} km
-                </div>
-              </div>
-              
-              <div className="flex items-center mb-3">
-                <WashingMachine className="h-5 w-5 mr-2" />
-                <span className="text-xl font-bold">{subtask.customerName}</span>
-              </div>
-              
-              <div className="flex items-start space-x-2 mb-3">
-                <MapPin className="h-5 w-5 text-gray-500 mt-0.5" />
-                <span>Location of the laundry shop</span>
-              </div>
-              
-              <div className="flex items-start space-x-2 mb-4">
-                <Phone className="h-5 w-5 text-gray-500 mt-0.5" />
-                <span>{subtask.mobileNumber || "Mobile number"}</span>
-              </div>
-              
-              <Button 
-                className={`w-full h-12 text-lg font-semibold rounded-xl ${isClosest ? 'bg-green-500 hover:bg-green-600' : 'bg-green-400 hover:bg-green-500'} text-black`}
-                onClick={() => startTask(subtask)}
-                disabled={!isClosest}
-              >
-                {isClosest ? 'Start Collect' : 'Not Next Task'}
-              </Button>
-              {!isClosest && (
-                <p className="text-xs text-center mt-2 text-gray-500">Complete the closest task first</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  };
-  
-  const renderPickupCard = (subtask: SubTask, parentTask: Task, index: number) => {
-    const isClosest = isClosestSubtask(subtask.id);
-    
-    return (
-      <motion.div
-        key={subtask.id}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: index * 0.1 }}
-      >
-        <Card className={`overflow-hidden rounded-3xl border ${isClosest ? 'border-sky-500 shadow-md' : 'border-gray-200'} shadow-sm`}>
-          <CardContent className="p-0">
-            <div className="p-4">
-              <div className="flex justify-between items-start mb-4">
-                <div className="text-lg font-semibold">
-                  ID {parentTask.orderNumber}P
-                </div>
-                <div className="flex items-center text-sky-400 font-medium">
-                  <Route className="h-4 w-4 mr-1" />
-                  {subtask.distance !== undefined ? subtask.distance : 0} km
-                </div>
-              </div>
-              
-              <div className="flex items-center mb-3">
-                <WashingMachine className="h-5 w-5 mr-2" />
-                <span className="text-xl font-bold">{subtask.customerName}</span>
-              </div>
-              
-              <div className="flex items-start space-x-2 mb-3">
-                <MapPin className="h-5 w-5 text-gray-500 mt-0.5" />
-                <span>{subtask.location.address}</span>
-              </div>
-              
-              <div className="flex items-start space-x-2 mb-4">
-                <Phone className="h-5 w-5 text-gray-500 mt-0.5" />
-                <span>{subtask.mobileNumber || "Mobile number"}</span>
-              </div>
-              
-              <Button 
-                className={`w-full h-12 text-lg font-semibold rounded-xl ${isClosest ? 'bg-sky-500 hover:bg-sky-600' : 'bg-sky-400 hover:bg-sky-500'} text-white`}
-                onClick={() => startTask(subtask)}
-                disabled={!isClosest}
-              >
-                {isClosest ? 'Start Pickup' : 'Not Next Task'}
-              </Button>
-              {!isClosest && (
-                <p className="text-xs text-center mt-2 text-gray-500">Complete the closest task first</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  };
-  
-  const renderTaskCard = (subtask: SubTask, parentTask: Task, index: number) => {
-    const isClosest = isClosestSubtask(subtask.id);
-    
-    if (subtask.type === 'collect') {
-      return renderCollectCard(subtask, parentTask, index);
-    }
-    
-    if (subtask.type === 'pickup') {
-      return renderPickupCard(subtask, parentTask, index);
-    }
-    
-    return (
-      <motion.div
-        key={subtask.id}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: index * 0.1 }}
-      >
-        <Card className={`task-card-hover relative overflow-hidden ${isClosest ? 'border-primary shadow-md' : ''}`}>
-          <div className={`absolute top-0 left-0 w-1 h-full ${getSubtaskColor(subtask.type)}`} />
-          
-          <CardHeader className="pb-2">
-            <div className="flex justify-between items-start">
-              <div>
-                <div className="flex items-center">
-                  <CardTitle className="text-lg font-medium mr-2">
-                    Order #{parentTask.orderNumber}
-                  </CardTitle>
-                  <Badge variant="secondary" className={parentTask.washType === 'express' || parentTask.washType === 'both' ? 
-                    "bg-amber-100 text-amber-800 border-amber-200" : 
-                    "bg-blue-100 text-blue-800 border-blue-200"}>
-                    {parentTask.washType === 'express' || parentTask.washType === 'both' ? (
-                      <>
-                        <Zap className="h-3 w-3 mr-1" />
-                        Express
-                      </>
-                    ) : (
-                      <>
-                        <Timer className="h-3 w-3 mr-1" />
-                        Standard
-                      </>
-                    )}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Task {getSubtaskTypeName(subtask.type)}
-                </p>
-              </div>
-              <Badge variant={getSubtaskBadgeVariant(subtask.type)}>
-                {getSubtaskTypeName(subtask.type)}
-              </Badge>
-            </div>
-          </CardHeader>
-          
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span className="flex-1">{subtask.customerName}</span>
-              </div>
-              
-              <div className="flex items-start space-x-2">
-                <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                <span>{subtask.location.address}</span>
-              </div>
-              
-              {subtask.mobileNumber && (
-                <div className="flex items-start space-x-2">
-                  <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <span>{subtask.mobileNumber}</span>
-                </div>
-              )}
-              
-              <Separator />
-              
-              <div className="flex justify-between pt-1">
-                <div className="flex items-center space-x-2">
-                  <Package className="h-4 w-4 text-muted-foreground" />
-                  <span>{parentTask.items} items</span>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium text-primary">
-                    {subtask.distance !== undefined ? subtask.distance : 0} km
-                  </span>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2">
-                <Button 
-                  variant="outline"
-                  onClick={() => viewDetails(subtask)}
-                  className="w-full"
-                >
-                  View Details
-                </Button>
-                
-                <Button 
-                  className="w-full" 
-                  onClick={() => startTask(subtask)}
-                  disabled={!isClosest}
-                >
-                  {isClosest ? `Start ${getSubtaskTypeName(subtask.type)}` : 'Not Next Task'}
-                </Button>
-              </div>
-              
-              {!isClosest && (
-                <p className="text-xs text-center mt-1 text-gray-500">Complete the closest task first</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  };
-  
-  const renderSideBySideOrders = () => {
-    return (
-      <div className="grid grid-cols-1 gap-6">
-        {selectedWashType === 'express' ? (
-          <Card 
-            className="cursor-pointer transition border-amber-400 shadow-md"
-            onClick={() => setSelectedWashType('express')}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-amber-500" />
-                <h2 className="text-xl font-semibold">Express Orders ({expressOrders.length})</h2>
-              </div>
-              <p className="text-sm text-muted-foreground">High priority orders</p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {expressSubtasks.length > 0 ? (
-                  expressSubtasks.map((subtask, index) => {
-                    const parentTask = tasks.find(task => task.subtasks.some(st => st.id === subtask.id));
-                    if (!parentTask) return null;
-                    return renderTaskCard(subtask, parentTask, index);
-                  })
-                ) : snoozedUntilLast || snoozedTasks.length > 0 ? (
-                  <div className="p-4 text-center">
-                    <p className="text-muted-foreground">Orders snoozed according to your preference</p>
-                    <Button 
-                      variant="outline" 
-                      className="mt-2"
-                      onClick={clearSnooze}
-                    >
-                      Cancel Snooze
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="p-4 text-center">
-                    <p className="text-muted-foreground">No express orders available</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card 
-            className="cursor-pointer transition border-blue-400 shadow-md"
-            onClick={() => setSelectedWashType('standard')}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <Timer className="h-5 w-5 text-blue-500" />
-                <h2 className="text-xl font-semibold">Standard Orders ({standardOrders.length})</h2>
-              </div>
-              <p className="text-sm text-muted-foreground">Regular priority orders</p>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {standardSubtasks.length > 0 ? (
-                  standardSubtasks.map((subtask, index) => {
-                    const parentTask = tasks.find(task => task.subtasks.some(st => st.id === subtask.id));
-                    if (!parentTask) return null;
-                    return renderTaskCard(subtask, parentTask, index);
-                  })
-                ) : snoozedUntilLast || snoozedTasks.length > 0 ? (
-                  <div className="p-4 text-center">
-                    <p className="text-muted-foreground">Orders snoozed according to your preference</p>
-                    <Button 
-                      variant="outline" 
-                      className="mt-2"
-                      onClick={clearSnooze}
-                    >
-                      Cancel Snooze
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="p-4 text-center">
-                    <p className="text-muted-foreground">No standard orders available</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    );
+  const getParentTaskOrderNumber = (subtaskId: string) => {
+    const parentTask = tasks.find(task => task.subtasks.some(st => st.id === subtaskId));
+    return parentTask?.orderNumber || '';
   };
   
   const journeyNumber = completedTasks.length + 1;
@@ -963,26 +369,11 @@ const Index = () => {
         transition={{ duration: 0.3 }}
       >
         <h1 className="text-2xl font-bold mb-6">Assigned Orders</h1>
-        {(snoozedUntilLast || snoozedTasks.length > 0) && (
-          <div className="bg-amber-50 border border-amber-200 rounded-md p-3 mb-4 flex items-center justify-between">
-            <div className="flex items-center">
-              <Clock className="h-5 w-5 text-amber-500 mr-2" />
-              <span className="text-amber-800">
-                {snoozedUntilLast 
-                  ? "Snoozed until last order" 
-                  : "Snoozed until next order completion"}
-              </span>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={clearSnooze}
-              className="text-amber-800 border-amber-300 hover:bg-amber-100"
-            >
-              Cancel Snooze
-            </Button>
-          </div>
-        )}
+        <SnoozeNotification 
+          snoozedUntilLast={snoozedUntilLast} 
+          snoozedTasks={snoozedTasks} 
+          clearSnooze={clearSnooze} 
+        />
       </motion.div>
       
       <div
@@ -994,97 +385,45 @@ const Index = () => {
       </div>
       
       {locationReachedTask ? (
-        renderLocationReachedTask()
+        <LocationReachedCard 
+          reachedTask={locationReachedTask}
+          parentTaskOrderNumber={getParentTaskOrderNumber(locationReachedTask.id)}
+          onComplete={handleCompleteSubtask}
+        />
       ) : inProgressTask ? (
-        renderInProgressTask()
+        <ActiveTaskCard 
+          inProgressTask={inProgressTask}
+          parentTaskOrderNumber={getParentTaskOrderNumber(inProgressTask.id)}
+          onLocationReached={locationReached}
+          onCancel={cancelTask}
+          onSnooze={snoozeTask}
+          onReportIssue={reportIssue}
+        />
       ) : activeSubtasks.length === 0 ? (
-        <Card className="w-full p-8 text-center">
-          <div className="flex flex-col items-center justify-center space-y-3">
-            <CheckCircle className="h-12 w-12 text-primary/50" />
-            <h3 className="text-xl font-medium">All tasks completed</h3>
-            <p className="text-muted-foreground">You've completed all assigned tasks!</p>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setTasks(initialTasks);
-                setDriverState(initialDriverState);
-                setCompletedTasks([]);
-                clearSnooze();
-                toast.info("Tasks have been reset!");
-              }}
-            >
-              Reset Tasks
-            </Button>
-          </div>
-        </Card>
+        <AllTasksCompleted resetTasks={resetAllTasks} />
       ) : (
         <div className="space-y-8">
-          <div className="flex flex-wrap gap-3 mb-2">
-            <Button 
-              variant={selectedWashType === 'express' ? "default" : "outline"}
-              onClick={() => setSelectedWashType('express')}
-              className="rounded-full flex items-center gap-1"
-            >
-              <Zap className="h-4 w-4 text-amber-500" />
-              Express ({expressOrders.length})
-            </Button>
-            <Button 
-              variant={selectedWashType === 'standard' ? "default" : "outline"}
-              onClick={() => setSelectedWashType('standard')}
-              className="rounded-full flex items-center gap-1"
-            >
-              <Timer className="h-4 w-4 text-blue-500" />
-              Standard ({standardOrders.length})
-            </Button>
-          </div>
+          <OrderTypeSelector 
+            selectedWashType={selectedWashType}
+            setSelectedWashType={setSelectedWashType}
+            expressOrdersCount={expressOrders.length}
+            standardOrdersCount={standardOrders.length}
+          />
           
-          {renderSideBySideOrders()}
+          <OrderCategorySection 
+            subtasks={selectedWashType === 'express' ? expressSubtasks : standardSubtasks}
+            tasks={tasks}
+            washType={selectedWashType}
+            snoozedUntilLast={snoozedUntilLast}
+            snoozedTasks={snoozedTasks}
+            clearSnooze={clearSnooze}
+            isSelectedType={true}
+            onClick={() => {}}
+          />
         </div>
       )}
       
-      {completedTasks.length > 0 && (
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Completed Tasks ({completedTasks.length})</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {completedTasks.map((task, index) => (
-              <motion.div
-                key={task.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-              >
-                <Card className="bg-muted/30">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg font-medium">Order #{task.orderNumber}</CardTitle>
-                      <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
-                        Completed
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-2">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="flex-1">{task.subtasks[task.subtasks.length - 1].customerName}</span>
-                      </div>
-                      
-                      <div className="flex flex-col space-y-2 pt-1">
-                        {task.subtasks.map((subtask, subIndex) => (
-                          <div className="flex items-center space-x-2" key={subIndex}>
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                            <span className="text-sm">{getSubtaskTypeName(subtask.type)} completed</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
+      <CompletedTasksList completedTasks={completedTasks} />
     </div>
   );
 };
