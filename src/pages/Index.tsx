@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +8,7 @@ import { CheckCircle, Clock, MapPin, Package, User, Phone, WashingMachine, Route
 import { Task, SubTask, Location, DriverState } from '@/types/task';
 import { calculateDistance, sortSubtasksByDistance, getClosestSubtask } from '@/utils/distance';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 const initialDriverState: DriverState = {
   currentLocation: {
@@ -186,6 +186,7 @@ const initialTasks: Task[] = [
 ];
 
 const Index = () => {
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [driverState, setDriverState] = useState<DriverState>(initialDriverState);
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
@@ -362,9 +363,15 @@ const Index = () => {
   };
   
   const viewDetails = (task: SubTask) => {
-    toast.info(`Viewing details for task ${task.id}`, {
-      description: "Full details would be shown in a modal in a real app",
-    });
+    const parentTask = tasks.find(
+      t => t.subtasks.some(st => st.id === task.id)
+    );
+    
+    if (parentTask) {
+      navigate(`/task/${parentTask.orderNumber}`);
+    } else {
+      toast.error("Could not find parent task");
+    }
   };
   
   const renderLocationReachedTask = () => {
