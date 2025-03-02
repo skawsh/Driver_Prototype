@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Phone, AlertCircle, Clock, WashingMachine } from 'lucide-react';
@@ -6,10 +7,11 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Task, SubTask } from '@/types/task';
 
+// Using consistent mock data across all pages
 const mockTasks: Record<string, Task> = {
   "task1": {
     id: "task1",
-    orderNumber: "1234",
+    orderNumber: "1234P",
     items: 3,
     subtasks: [
       {
@@ -71,7 +73,7 @@ const TaskDetails = () => {
   };
 
   const reportIssue = () => {
-    navigate(`/report-issue/${taskId}/${orderId}`);
+    navigate(`/report-issue/${taskId}/${parentTask?.orderNumber || orderId}`);
   };
 
   const locationReached = () => {
@@ -79,7 +81,7 @@ const TaskDetails = () => {
       description: "Task marked as complete.",
     });
     setTimeout(() => {
-      navigate(`/task-success/${taskId}/${orderId}`);
+      navigate(`/task-success/${taskId}/${parentTask?.orderNumber || orderId}`);
     }, 1500);
   };
 
@@ -120,7 +122,7 @@ const TaskDetails = () => {
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <div className="text-xl font-bold">
-              ID {orderId}P
+              ID {parentTask.orderNumber}
             </div>
             <div className="flex items-center">
               <MapPin className="h-4 w-4 text-blue-500 mr-1" />
