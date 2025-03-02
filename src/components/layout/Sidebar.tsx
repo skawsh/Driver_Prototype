@@ -1,23 +1,24 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { List, User, Settings, Archive, ChevronLeft, Menu } from 'lucide-react';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 
 interface NavItemProps {
   icon: React.ElementType;
   title: string;
   to: string;
   isSidebarOpen: boolean;
+  onClick?: () => void;
 }
 
-const NavItem = ({ icon: Icon, title, to, isSidebarOpen }: NavItemProps) => {
+const NavItem = ({ icon: Icon, title, to, isSidebarOpen, onClick }: NavItemProps) => {
   const location = useLocation();
   const isActive = location.pathname === to;
   
   return (
-    <NavLink to={to} className="w-full">
+    <NavLink to={to} className="w-full" onClick={onClick}>
       <div 
         className={cn(
           "flex items-center rounded-lg px-3 py-3 transition-all duration-300 group",
@@ -47,9 +48,22 @@ const NavItem = ({ icon: Icon, title, to, isSidebarOpen }: NavItemProps) => {
 
 export const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
+  const { setOpenMobile, openMobile } = useSidebar();
   
+  // Toggle desktop sidebar
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
+  };
+  
+  // Close mobile sidebar when route changes
+  const location = useLocation();
+  useEffect(() => {
+    setOpenMobile(false);
+  }, [location, setOpenMobile]);
+  
+  // Handle closing mobile sidebar
+  const closeMobileSidebar = () => {
+    setOpenMobile(false);
   };
   
   return (
@@ -79,6 +93,7 @@ export const Sidebar = () => {
           <button 
             onClick={toggleSidebar} 
             className="p-1 rounded-md hover:bg-secondary transition-all duration-300"
+            aria-label={isOpen ? "Collapse sidebar" : "Expand sidebar"}
           >
             <ChevronLeft className={cn(
               "h-5 w-5 transition-all duration-300",
@@ -121,7 +136,7 @@ export const Sidebar = () => {
           <div className={cn(
             "fixed inset-y-0 left-0 z-50 w-64 bg-sidebar shadow-lg transform transition-transform duration-300 ease-in-out",
             "pointer-events-auto",
-            !isOpen && "-translate-x-full"
+            !openMobile && "-translate-x-full"
           )}>
             <div className="h-full flex flex-col">
               <div className="p-4 border-b flex items-center justify-between h-16">
@@ -137,24 +152,28 @@ export const Sidebar = () => {
                   title="Assigned Orders" 
                   to="/" 
                   isSidebarOpen={true} 
+                  onClick={closeMobileSidebar}
                 />
                 <NavItem 
                   icon={Archive} 
                   title="Order History" 
                   to="/order-history" 
                   isSidebarOpen={true} 
+                  onClick={closeMobileSidebar}
                 />
                 <NavItem 
                   icon={User} 
                   title="Profile" 
                   to="/profile" 
                   isSidebarOpen={true} 
+                  onClick={closeMobileSidebar}
                 />
                 <NavItem 
                   icon={Settings} 
                   title="Settings" 
                   to="/settings" 
                   isSidebarOpen={true} 
+                  onClick={closeMobileSidebar}
                 />
               </nav>
             </div>
@@ -164,9 +183,9 @@ export const Sidebar = () => {
           <div 
             className={cn(
               "fixed inset-0 bg-background/80 backdrop-blur-sm transition-opacity duration-300",
-              isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+              openMobile ? "opacity-100" : "opacity-0 pointer-events-none"
             )}
-            onClick={() => setIsOpen(false)}
+            onClick={closeMobileSidebar}
           />
         </div>
       </div>

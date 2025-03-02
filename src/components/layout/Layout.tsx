@@ -6,7 +6,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 
 export const Layout = () => {
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full">
         <Sidebar />
         
