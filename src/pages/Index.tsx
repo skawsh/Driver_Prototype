@@ -9,7 +9,6 @@ import { Task, SubTask, Location, DriverState } from '@/types/task';
 import { calculateDistance, sortSubtasksByDistance } from '@/utils/distance';
 import { toast } from 'sonner';
 
-// Initial driver location (starting point)
 const initialDriverState: DriverState = {
   currentLocation: {
     latitude: 17.3850,
@@ -18,14 +17,12 @@ const initialDriverState: DriverState = {
   }
 };
 
-// Studio location (for drop and collect tasks)
 const studioLocation: Location = {
   latitude: 17.4100,
   longitude: 78.5000,
   address: "Laundry Studio, HITEC City, Hyderabad, Telangana 500081"
 };
 
-// Initial task data
 const initialTasks: Task[] = [
   {
     id: "task1",
@@ -184,7 +181,6 @@ const Index = () => {
   const [driverState, setDriverState] = useState<DriverState>(initialDriverState);
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   
-  // Calculate active subtasks (those that are enabled but not completed)
   const getActiveSubtasks = () => {
     const activeSubtasks: SubTask[] = [];
     
@@ -202,42 +198,34 @@ const Index = () => {
     return sortSubtasksByDistance(activeSubtasks, driverState.currentLocation);
   };
   
-  // Recalculate active subtasks whenever driver location or tasks change
   const activeSubtasks = getActiveSubtasks();
   
-  // Complete a subtask and update the workflow
   const completeSubtask = (subtaskId: string) => {
     const updatedTasks = [...tasks];
     let taskCompleted = false;
     let newLocation: Location | null = null;
     
-    // Loop through tasks to find the subtask
     for (let i = 0; i < updatedTasks.length; i++) {
       const task = updatedTasks[i];
       const subtaskIndex = task.subtasks.findIndex(st => st.id === subtaskId);
       
       if (subtaskIndex !== -1) {
-        // Mark this subtask as completed
         task.subtasks[subtaskIndex].status = 'completed';
         newLocation = task.subtasks[subtaskIndex].location;
         
-        // If this is not the last subtask, enable the next one
         if (subtaskIndex < task.subtasks.length - 1) {
           task.subtasks[subtaskIndex + 1].enabled = true;
           task.status = 'in-progress';
         } else {
-          // This was the last subtask, mark the task as completed
           task.status = 'completed';
           taskCompleted = true;
           
-          // Add to completed tasks
           setCompletedTasks(prev => [...prev, task]);
         }
         break;
       }
     }
     
-    // Remove completed tasks from the active list
     if (taskCompleted) {
       const filteredTasks = updatedTasks.filter(task => task.status !== 'completed');
       setTasks(filteredTasks);
@@ -245,7 +233,6 @@ const Index = () => {
       setTasks(updatedTasks);
     }
     
-    // Update driver location
     if (newLocation) {
       setDriverState({
         ...driverState,
@@ -253,13 +240,11 @@ const Index = () => {
       });
     }
     
-    // Show success toast
     toast.success(`Subtask completed successfully!`, {
       description: `New location: ${newLocation?.address}`,
     });
   };
   
-  // Get button color based on subtask type
   const getSubtaskColor = (type: string) => {
     switch (type) {
       case 'pickup':
@@ -275,7 +260,6 @@ const Index = () => {
     }
   };
   
-  // Get badge variant based on subtask type
   const getSubtaskBadgeVariant = (type: string): "default" | "secondary" | "outline" | "destructive" => {
     switch (type) {
       case 'pickup':
@@ -291,7 +275,6 @@ const Index = () => {
     }
   };
   
-  // Get friendly name for subtask type
   const getSubtaskTypeName = (type: string) => {
     switch (type) {
       case 'pickup':
@@ -307,7 +290,6 @@ const Index = () => {
     }
   };
   
-  // Render the collect task card in a special format
   const renderCollectCard = (subtask: SubTask, parentTask: Task, index: number) => {
     return (
       <motion.div
@@ -357,6 +339,55 @@ const Index = () => {
     );
   };
   
+  const renderPickupCard = (subtask: SubTask, parentTask: Task, index: number) => {
+    return (
+      <motion.div
+        key={subtask.id}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: index * 0.1 }}
+      >
+        <Card className="overflow-hidden rounded-3xl border border-gray-200 shadow-sm">
+          <CardContent className="p-0">
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <div className="text-lg font-semibold">
+                  ID {parentTask.orderNumber}P
+                </div>
+                <div className="flex items-center text-sky-400 font-medium">
+                  <Route className="h-4 w-4 mr-1" />
+                  {subtask.distance} km
+                </div>
+              </div>
+              
+              <div className="flex items-center mb-3">
+                <WashingMachine className="h-5 w-5 mr-2" />
+                <span className="text-xl font-bold">{subtask.customerName}</span>
+              </div>
+              
+              <div className="flex items-start space-x-2 mb-3">
+                <MapPin className="h-5 w-5 text-gray-500 mt-0.5" />
+                <span>{subtask.location.address}</span>
+              </div>
+              
+              <div className="flex items-start space-x-2 mb-4">
+                <Phone className="h-5 w-5 text-gray-500 mt-0.5" />
+                <span>{subtask.mobileNumber || "Mobile number"}</span>
+              </div>
+              
+              <Button 
+                className="w-full h-12 text-lg font-semibold rounded-xl bg-sky-400 hover:bg-sky-500 text-white"
+                onClick={() => completeSubtask(subtask.id)}
+              >
+                Start Pickup
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  };
+  
   return (
     <div className="py-6 md:py-8">
       <motion.div
@@ -389,16 +420,18 @@ const Index = () => {
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {activeSubtasks.map((subtask, index) => {
-            // Find the parent task for this subtask
             const parentTask = tasks.find(
               task => task.subtasks.some(st => st.id === subtask.id)
             );
             
             if (!parentTask) return null;
             
-            // Use special card design for collect subtasks
             if (subtask.type === 'collect') {
               return renderCollectCard(subtask, parentTask, index);
+            }
+            
+            if (subtask.type === 'pickup') {
+              return renderPickupCard(subtask, parentTask, index);
             }
             
             return (
@@ -429,8 +462,8 @@ const Index = () => {
                   
                   <CardContent>
                     <div className="space-y-3">
-                      <div className="flex items-start space-x-2">
-                        <User className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div className="flex items-center space-x-2">
+                        <User className="h-4 w-4 text-muted-foreground" />
                         <span className="flex-1">{subtask.customerName}</span>
                       </div>
                       

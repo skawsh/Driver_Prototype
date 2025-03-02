@@ -75,3 +75,18 @@
   background-color: #16a34a !important; /* green-600 */
   transform: translateY(-1px);
 }
+
+/* Pickup task button style */
+.pickup-button {
+  background-color: #38bdf8 !important; /* sky-400 */
+  color: white !important;
+  font-weight: 600;
+  border-radius: 12px;
+  padding: 12px 24px;
+  transition: all 0.2s ease-in-out;
+}
+
+.pickup-button:hover {
+  background-color: #0ea5e9 !important; /* sky-500 */
+  transform: translateY(-1px);
+}
