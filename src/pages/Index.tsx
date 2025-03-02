@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Clock, MapPin, Package, User, Phone, WashingMachine, Route, AlertCircle } from 'lucide-react';
+import { CheckCircle, Clock, MapPin, Package, User, Phone, WashingMachine, Route, AlertCircle, X, ArrowLeft } from 'lucide-react';
 import { Task, SubTask, Location, DriverState } from '@/types/task';
 import { calculateDistance, sortSubtasksByDistance, getClosestSubtask } from '@/utils/distance';
 import { toast } from 'sonner';
@@ -190,6 +190,7 @@ const Index = () => {
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [inProgressTask, setInProgressTask] = useState<SubTask | null>(null);
+  const [locationReachedTask, setLocationReachedTask] = useState<SubTask | null>(null);
   
   const getActiveSubtasks = () => {
     const activeSubtasks: SubTask[] = [];
@@ -220,7 +221,14 @@ const Index = () => {
   
   const startTask = (subtask: SubTask) => {
     setInProgressTask(subtask);
+    setLocationReachedTask(null);
     toast.success(`Started ${getSubtaskTypeName(subtask.type)} task!`);
+  }
+  
+  const cancelTask = () => {
+    setInProgressTask(null);
+    setLocationReachedTask(null);
+    toast.info("Task cancelled");
   }
   
   const reportIssue = () => {
@@ -231,8 +239,10 @@ const Index = () => {
   
   const locationReached = () => {
     if (inProgressTask) {
-      completeSubtask(inProgressTask.id);
-      setInProgressTask(null);
+      setLocationReachedTask(inProgressTask);
+      toast.success("Location reached!", {
+        description: "Please confirm task completion",
+      });
     }
   }
   
@@ -279,6 +289,9 @@ const Index = () => {
         setTasks(prevTasks => [...prevTasks]);
       }, 100);
     }
+    
+    setInProgressTask(null);
+    setLocationReachedTask(null);
     
     toast.success(`Subtask completed successfully!`, {
       description: `New location: ${newLocation?.address}`,
@@ -334,6 +347,90 @@ const Index = () => {
     return closestSubtask && closestSubtask.id === subtaskId;
   };
   
+  const viewDetails = (task: SubTask) => {
+    toast.info(`Viewing details for task ${task.id}`, {
+      description: "Full details would be shown in a modal in a real app",
+    });
+  };
+  
+  const renderLocationReachedTask = () => {
+    if (!locationReachedTask) return null;
+    
+    const parentTask = tasks.find(
+      task => task.subtasks.some(st => st.id === locationReachedTask.id)
+    );
+    
+    if (!parentTask) return null;
+    
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <Card className="overflow-hidden rounded-3xl border-2 border-primary shadow-lg">
+          <CardContent className="p-0">
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <div className="text-lg font-semibold">
+                  ID {parentTask.orderNumber}P
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="flex items-center text-sky-400 font-medium">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    {locationReachedTask.distance !== undefined ? locationReachedTask.distance : 0} Km
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center mb-4">
+                <WashingMachine className="h-5 w-5 mr-2" />
+                <span className="text-xl font-bold">{locationReachedTask.customerName}</span>
+              </div>
+              
+              <a 
+                href={`https://maps.google.com/?q=${locationReachedTask.location.latitude},${locationReachedTask.location.longitude}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-start space-x-2 mb-3 text-blue-500 hover:underline"
+              >
+                <MapPin className="h-5 w-5 text-blue-500 mt-0.5" />
+                <span className="break-all">{locationReachedTask.location.address}</span>
+              </a>
+              
+              {locationReachedTask.mobileNumber && (
+                <a 
+                  href={`tel:${locationReachedTask.mobileNumber}`}
+                  className="flex items-start space-x-2 mb-4 text-blue-500 hover:underline"
+                >
+                  <Phone className="h-5 w-5 text-blue-500 mt-0.5" />
+                  <span>{locationReachedTask.mobileNumber.replace(/\+91 /, '')}</span>
+                </a>
+              )}
+              
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <Button 
+                  variant="outline"
+                  className="rounded-xl bg-green-100 hover:bg-green-200"
+                  onClick={() => viewDetails(locationReachedTask)}
+                >
+                  View details
+                </Button>
+                
+                <Button 
+                  className="location-reached-button w-full h-12 text-lg font-semibold"
+                  onClick={() => completeSubtask(locationReachedTask.id)}
+                >
+                  Location reached
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  };
+  
   const renderInProgressTask = () => {
     if (!inProgressTask) return null;
     
@@ -349,7 +446,16 @@ const Index = () => {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.3 }}
       >
-        <Card className="overflow-hidden rounded-3xl border-2 border-primary shadow-lg">
+        <Card className="overflow-hidden rounded-3xl border-2 border-primary shadow-lg relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 z-10"
+            onClick={cancelTask}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+          
           <CardContent className="p-0">
             <div className="p-4">
               <div className="flex justify-between items-start mb-4">
@@ -533,7 +639,9 @@ const Index = () => {
         <h1 className="text-2xl font-bold mb-6">Assigned Orders</h1>
       </motion.div>
       
-      {inProgressTask ? (
+      {locationReachedTask ? (
+        renderLocationReachedTask()
+      ) : inProgressTask ? (
         renderInProgressTask()
       ) : activeSubtasks.length === 0 ? (
         <Card className="w-full p-8 text-center">
