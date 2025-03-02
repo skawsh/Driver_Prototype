@@ -460,34 +460,37 @@ const Index = () => {
         transition={{ duration: 0.3 }}
       >
         <Card className="overflow-hidden rounded-3xl border-2 border-primary shadow-lg relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 z-10"
-            onClick={cancelTask}
-          >
-            <X className="h-5 w-5" />
-          </Button>
+          <div className="card-header-container p-4">
+            <div className="text-lg font-semibold">
+              ID {parentTask.orderNumber}P
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <div className="distance-container">
+                <div className="flex items-center text-sky-400 font-medium">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  {inProgressTask.distance !== undefined ? inProgressTask.distance : 0} Km
+                </div>
+                <Clock 
+                  className="h-5 w-5 clock-icon" 
+                  onClick={() => snoozeTask(inProgressTask.id)}
+                  aria-label="Snooze this task for 30 minutes"
+                />
+              </div>
+            </div>
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              className="close-button"
+              onClick={cancelTask}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
           
           <CardContent className="p-0">
-            <div className="p-4">
-              <div className="flex justify-between items-start mb-4">
-                <div className="text-lg font-semibold">
-                  ID {parentTask.orderNumber}P
-                </div>
-                <div className="distance-container">
-                  <div className="flex items-center text-sky-400 font-medium">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    {inProgressTask.distance !== undefined ? inProgressTask.distance : 0} Km
-                  </div>
-                  <Clock 
-                    className="h-5 w-5 clock-icon" 
-                    onClick={() => snoozeTask(inProgressTask.id)}
-                    title="Snooze this task for 30 minutes"
-                  />
-                </div>
-              </div>
-              
+            <div className="px-4 pb-4">
               <div className="flex items-center mb-4">
                 <WashingMachine className="h-5 w-5 mr-2" />
                 <span className="text-xl font-bold">{inProgressTask.customerName}</span>
