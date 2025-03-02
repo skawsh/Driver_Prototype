@@ -72,7 +72,7 @@ const OrderDetailsPage = () => {
             : item
         );
       } else {
-        // We don't need to update dryCleaning since it's not editable
+        // We don't update dryCleaning since it's not editable
       }
       
       return updatedData;
@@ -189,7 +189,6 @@ const OrderDetailsPage = () => {
                       variant="ghost" 
                       className="text-blue-500 h-auto py-1 px-2"
                       onClick={() => handleEditItem('washAndFold', item.id)}
-                      disabled={!isEditing}
                     >
                       Edit
                     </Button>
@@ -255,39 +254,42 @@ const OrderDetailsPage = () => {
       <Sheet open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>Edit Item</SheetTitle>
+            <SheetTitle>Edit Clothing Item</SheetTitle>
           </SheetHeader>
           
           {currentEditItem && (
             <div className="py-6 space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="itemName">Item Name</Label>
+                <Label htmlFor="itemName">Clothing Item</Label>
                 <Input 
                   id="itemName" 
                   value={currentEditItem.name} 
                   onChange={handleNameChange}
-                  placeholder="Item name"
+                  placeholder="Clothing item name"
+                  className="text-base" 
                 />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="quantity">Quantity</Label>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-4 bg-gray-50 p-3 rounded-md">
                   <Button 
                     variant="outline" 
                     size="icon" 
                     onClick={() => handleQuantityChange('decrease')}
                     disabled={currentEditItem.quantity <= 1}
+                    className="rounded-full h-8 w-8 p-0 flex items-center justify-center"
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
-                  <div className="flex-1 text-center font-medium">
+                  <div className="flex-1 text-center font-medium text-xl">
                     {currentEditItem.quantity}
                   </div>
                   <Button 
                     variant="outline" 
                     size="icon" 
                     onClick={() => handleQuantityChange('increase')}
+                    className="rounded-full h-8 w-8 p-0 flex items-center justify-center"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -296,11 +298,11 @@ const OrderDetailsPage = () => {
             </div>
           )}
           
-          <SheetFooter className="mt-6">
-            <Button onClick={() => setIsEditModalOpen(false)} variant="outline">
+          <SheetFooter className="mt-auto">
+            <Button onClick={() => setIsEditModalOpen(false)} variant="outline" className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button onClick={handleUpdateItem}>
+            <Button onClick={handleUpdateItem} className="w-full sm:w-auto">
               Save Changes
             </Button>
           </SheetFooter>
