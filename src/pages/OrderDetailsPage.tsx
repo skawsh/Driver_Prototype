@@ -140,6 +140,7 @@ const OrderDetailsPage = () => {
     
     setIsAddModalOpen(false);
     setNewItem({name: '', quantity: 1});
+    setHasChanges(true); // Ensure changes are tracked
     toast.success("New item added successfully");
   };
   
@@ -289,7 +290,7 @@ const OrderDetailsPage = () => {
               className="text-blue-500 w-full justify-start mb-4"
               onClick={handleOpenAddItemModal}
             >
-              Add or edit items (+)
+              Add items (+)
             </Button>
             
             <Separator className="mb-4" />
@@ -329,7 +330,7 @@ const OrderDetailsPage = () => {
           </Button>
           <Button 
             onClick={handleSaveChanges}
-            disabled={!hasChanges || isSaving}
+            disabled={isSaving}
           >
             {isSaving && !hasRequestedEdit ? "Saving..." : "Save changes"}
           </Button>
