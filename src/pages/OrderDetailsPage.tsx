@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Scale, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,9 @@ import { toast } from 'sonner';
 const OrderDetailsPage = () => {
   const { taskId, orderId } = useParams<{ taskId: string; orderId: string }>();
   const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasRequestedEdit, setHasRequestedEdit] = useState(false);
   
   const orderData = {
     id: orderId || "1234P",
@@ -46,11 +49,26 @@ const OrderDetailsPage = () => {
   };
   
   const handleRequestSackEdit = () => {
-    toast.success("Sack edit requested");
+    setIsSaving(true);
+    
+    setTimeout(() => {
+      setHasRequestedEdit(true);
+      setIsEditing(true);
+      setIsSaving(false);
+      toast.success("Sack edit requested. You can now modify the items.");
+    }, 1000);
   };
   
   const handleSaveChanges = () => {
-    toast.success("Changes saved successfully");
+    setIsSaving(true);
+    
+    setTimeout(() => {
+      setIsEditing(false);
+      setIsSaving(false);
+      toast.success("Changes saved successfully");
+      
+      navigate(`/tasks/${taskId}`);
+    }, 1500);
   };
   
   return (
@@ -109,6 +127,7 @@ const OrderDetailsPage = () => {
                       variant="ghost" 
                       className="text-blue-500 h-auto py-1 px-2"
                       onClick={() => handleEditItem('washAndFold', item.id)}
+                      disabled={!isEditing}
                     >
                       Edit
                     </Button>
@@ -121,6 +140,7 @@ const OrderDetailsPage = () => {
               variant="ghost" 
               className="text-blue-500 w-full justify-start mb-4"
               onClick={handleAddItem}
+              disabled={!isEditing}
             >
               Add or edit items (+)
             </Button>
@@ -156,11 +176,15 @@ const OrderDetailsPage = () => {
             variant="secondary" 
             className="bg-green-100 text-green-600 hover:bg-green-200"
             onClick={handleRequestSackEdit}
+            disabled={isEditing || isSaving}
           >
-            Request sack edit
+            {isSaving && hasRequestedEdit ? "Processing..." : "Request sack edit"}
           </Button>
-          <Button onClick={handleSaveChanges}>
-            Save changes
+          <Button 
+            onClick={handleSaveChanges}
+            disabled={!isEditing || isSaving}
+          >
+            {isSaving && !hasRequestedEdit ? "Saving..." : "Save changes"}
           </Button>
         </div>
       </div>
