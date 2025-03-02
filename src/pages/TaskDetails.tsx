@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Scale, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,12 @@ const TaskDetails = () => {
     { name: 'Dress', quantity: 2 },
     { name: 'Jacket', quantity: 1 }
   ]);
+
+  // Simulate loading task details when component mounts
+  useEffect(() => {
+    console.log(`Loading task details for taskId: ${taskId}, orderId: ${orderId}`);
+    // Here you would typically fetch the task details from an API
+  }, [taskId, orderId]);
   
   const handleGoBack = () => {
     navigate(-1);
