@@ -223,9 +223,15 @@ const Index = () => {
   }, [activeSubtasks.length, inProgressTask]);
   
   const startTask = (subtask: SubTask) => {
-    setInProgressTask(subtask);
-    setLocationReachedTask(null);
-    toast.success(`Started ${getSubtaskTypeName(subtask.type)} task!`);
+    const parentTask = tasks.find(
+      t => t.subtasks.some(st => st.id === subtask.id)
+    );
+    
+    if (parentTask) {
+      navigate(`/task/${subtask.id}/${parentTask.orderNumber}`);
+    } else {
+      toast.error("Error finding parent task");
+    }
   }
   
   const cancelTask = () => {
@@ -747,13 +753,13 @@ const Index = () => {
                       
                       <div className="flex items-start space-x-2">
                         <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                        <span className="flex-1">{subtask.location.address}</span>
+                        <span>{subtask.location.address}</span>
                       </div>
                       
                       {subtask.mobileNumber && (
                         <div className="flex items-start space-x-2">
                           <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
-                          <span className="flex-1">{subtask.mobileNumber}</span>
+                          <span>{subtask.mobileNumber}</span>
                         </div>
                       )}
                       
