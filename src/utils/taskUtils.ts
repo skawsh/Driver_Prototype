@@ -21,13 +21,13 @@ export const getActiveSubtasks = (tasks: Task[], driverState: DriverState) => {
 };
 
 export const markClosestSubtask = (subtasks: SubTask[], snoozedTasks: string[], snoozedUntilLast: boolean, tasks: Task[]) => {
-  // First, we identify which subtasks are snoozed
+  // Identify which subtasks are snoozed
   const snoozedSubtasks = subtasks.filter(subtask => 
     snoozedTasks.includes(subtask.id) || 
     (snoozedUntilLast && isPartOfTaskBeforeLast(subtask.id, tasks))
   );
   
-  // Then we get the active subtasks that are not snoozed
+  // Get active subtasks that are not snoozed
   const activeNonSnoozedSubtasks = subtasks.filter(subtask => 
     !snoozedTasks.includes(subtask.id) && 
     !(snoozedUntilLast && isPartOfTaskBeforeLast(subtask.id, tasks))
@@ -53,15 +53,18 @@ export const markClosestSubtask = (subtasks: SubTask[], snoozedTasks: string[], 
 function isPartOfTaskBeforeLast(subtaskId: string, tasks: Task[]): boolean {
   if (tasks.length <= 1) return false;
   
-  const lastTaskId = tasks[tasks.length - 1].id;
+  // Find task containing this subtask
+  const taskContainingSubtask = tasks.find(task => 
+    task.subtasks.some(st => st.id === subtaskId)
+  );
   
-  for (let i = 0; i < tasks.length - 1; i++) {
-    if (tasks[i].subtasks.some(st => st.id === subtaskId)) {
-      return true;
-    }
-  }
+  if (!taskContainingSubtask) return false;
   
-  return false;
+  // Get the last task in the array
+  const lastTask = tasks[tasks.length - 1];
+  
+  // If task containing subtask is not the last task, then it's "before the last"
+  return taskContainingSubtask.id !== lastTask.id;
 }
 
 export const filterSubtasksByWashType = (subtasks: SubTask[], tasks: Task[], type: 'express' | 'standard') => {
@@ -100,6 +103,38 @@ export const completeSubtask = (tasks: Task[], subtaskId: string): {
         taskCompleted = true;
       }
       break;
+    }
+  }
+  
+  // After completing a subtask, check if we need to enable any snoozed tasks
+  // Check localStorage for snoozed tasks
+  const snoozeInfoStr = localStorage.getItem('snoozeInfo');
+  if (snoozeInfoStr) {
+    const snoozeInfo = JSON.parse(snoozeInfoStr);
+    
+    // For 'last' type snoozing, we enable the task only if all other tasks are completed
+    if (snoozeInfo.snoozeType === 'last') {
+      // Count remaining non-snoozed active tasks
+      const remainingActiveTasks = updatedTasks.filter(task => 
+        task.status !== 'completed' && 
+        task.id !== snoozeInfo.taskId
+      );
+      
+      // If no other active tasks remain, enable the snoozed task
+      if (remainingActiveTasks.length === 0) {
+        // Find the snoozed task and make it enabled
+        for (const task of updatedTasks) {
+          if (task.id === snoozeInfo.taskId) {
+            task.subtasks.forEach(subtask => {
+              if (subtask.status === 'pending') {
+                subtask.enabled = true;
+                subtask.isSnoozed = false;
+              }
+            });
+            break;
+          }
+        }
+      }
     }
   }
   
