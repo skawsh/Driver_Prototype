@@ -223,9 +223,13 @@ const Index = () => {
   }, [activeSubtasks.length, inProgressTask]);
   
   const startTask = (subtask: SubTask) => {
-    setInProgressTask(subtask);
-    setLocationReachedTask(null);
-    toast.success(`Started ${getSubtaskTypeName(subtask.type)} task!`);
+    const parentTask = tasks.find(
+      t => t.subtasks.some(st => st.id === subtask.id)
+    );
+    
+    if (parentTask) {
+      navigate(`/task/${subtask.id}/${parentTask.orderNumber}`);
+    }
   }
   
   const cancelTask = () => {
@@ -590,10 +594,10 @@ const Index = () => {
               
               <Button 
                 className={`w-full h-12 text-lg font-semibold rounded-xl ${isClosest ? 'bg-green-500 hover:bg-green-600' : 'bg-green-400 hover:bg-green-500'} text-black`}
-                onClick={() => startTask(subtask)}
+                onClick={() => viewDetails(subtask)}
                 disabled={!isClosest}
               >
-                {isClosest ? 'Start Collect' : 'Not Next Task'}
+                {isClosest ? 'View Details' : 'Not Next Task'}
               </Button>
               {!isClosest && (
                 <p className="text-xs text-center mt-2 text-gray-500">Complete the closest task first</p>
@@ -645,10 +649,10 @@ const Index = () => {
               
               <Button 
                 className={`w-full h-12 text-lg font-semibold rounded-xl ${isClosest ? 'bg-sky-500 hover:bg-sky-600' : 'bg-sky-400 hover:bg-sky-500'} text-white`}
-                onClick={() => startTask(subtask)}
+                onClick={() => viewDetails(subtask)}
                 disabled={!isClosest}
               >
-                {isClosest ? 'Start Pickup' : 'Not Next Task'}
+                {isClosest ? 'View Details' : 'Not Next Task'}
               </Button>
               {!isClosest && (
                 <p className="text-xs text-center mt-2 text-gray-500">Complete the closest task first</p>
@@ -724,14 +728,9 @@ const Index = () => {
                   
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-lg font-medium">
-                          Order #{parentTask.orderNumber}
-                        </CardTitle>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Task {getSubtaskTypeName(subtask.type)}
-                        </p>
-                      </div>
+                      <CardTitle className="text-lg font-medium">
+                        Order #{parentTask.orderNumber}
+                      </CardTitle>
                       <Badge variant={getSubtaskBadgeVariant(subtask.type)}>
                         {getSubtaskTypeName(subtask.type)}
                       </Badge>
@@ -747,13 +746,13 @@ const Index = () => {
                       
                       <div className="flex items-start space-x-2">
                         <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                        <span className="flex-1">{subtask.location.address}</span>
+                        <span>{subtask.location.address}</span>
                       </div>
                       
                       {subtask.mobileNumber && (
                         <div className="flex items-start space-x-2">
                           <Phone className="h-4 w-4 text-muted-foreground mt-0.5" />
-                          <span className="flex-1">{subtask.mobileNumber}</span>
+                          <span>{subtask.mobileNumber}</span>
                         </div>
                       )}
                       
@@ -784,10 +783,10 @@ const Index = () => {
                         
                         <Button 
                           className="w-full" 
-                          onClick={() => startTask(subtask)}
+                          onClick={() => viewDetails(subtask)}
                           disabled={!isClosest}
                         >
-                          {isClosest ? `Start ${getSubtaskTypeName(subtask.type)}` : 'Not Next Task'}
+                          {isClosest ? 'View Details' : 'Not Next Task'}
                         </Button>
                       </div>
                       
