@@ -4,6 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Scale } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 const OrderDetailsPage = () => {
   const { taskId, orderId } = useParams<{ taskId: string; orderId: string }>();
@@ -39,14 +41,6 @@ const OrderDetailsPage = () => {
   const handleAddItem = () => {
     // For now, just log the add action
     console.log("Add new item");
-  };
-  
-  const handleRequestSackEdit = () => {
-    console.log("Request sack edit");
-  };
-  
-  const handleSaveChanges = () => {
-    console.log("Save changes");
   };
   
   return (
@@ -150,16 +144,12 @@ const OrderDetailsPage = () => {
           </p>
         </div>
         
-        {/* Action buttons */}
+        {/* Action buttons - we're not implementing their functionality for now */}
         <div className="grid grid-cols-2 gap-4">
-          <Button 
-            variant="secondary" 
-            className="bg-green-100 text-green-600 hover:bg-green-200"
-            onClick={handleRequestSackEdit}
-          >
+          <Button variant="secondary" className="bg-green-100 text-green-600 hover:bg-green-200">
             Request sack edit
           </Button>
-          <Button onClick={handleSaveChanges}>
+          <Button>
             Save changes
           </Button>
         </div>
