@@ -21,3 +21,9 @@ export const sortSubtasksByDistance = (subtasks: SubTask[], currentLocation: Loc
     return a.distance - b.distance;
   });
 };
+
+// Return only the first subtask (closest to driver)
+export const getClosestSubtask = (subtasks: SubTask[]) => {
+  if (subtasks.length === 0) return null;
+  return subtasks[0];
+};

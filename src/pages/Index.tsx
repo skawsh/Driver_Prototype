@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Clock, MapPin, Package, User, Phone, WashingMachine, Route } from 'lucide-react';
 import { Task, SubTask, Location, DriverState } from '@/types/task';
-import { calculateDistance, sortSubtasksByDistance } from '@/utils/distance';
+import { calculateDistance, sortSubtasksByDistance, getClosestSubtask } from '@/utils/distance';
 import { toast } from 'sonner';
 
 const initialDriverState: DriverState = {
@@ -181,6 +180,7 @@ const Index = () => {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [driverState, setDriverState] = useState<DriverState>(initialDriverState);
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   
   const getActiveSubtasks = () => {
     const activeSubtasks: SubTask[] = [];
@@ -200,6 +200,13 @@ const Index = () => {
   };
   
   const activeSubtasks = getActiveSubtasks();
+  const closestSubtask = getClosestSubtask(activeSubtasks);
+  
+  useEffect(() => {
+    if (closestSubtask && activeSubtasks.length > 0) {
+      setActiveTaskId(closestSubtask.id);
+    }
+  }, []);
   
   const completeSubtask = (subtaskId: string) => {
     const updatedTasks = [...tasks];
@@ -291,7 +298,13 @@ const Index = () => {
     }
   };
   
+  const isClosestSubtask = (subtaskId: string) => {
+    return closestSubtask && closestSubtask.id === subtaskId;
+  };
+  
   const renderCollectCard = (subtask: SubTask, parentTask: Task, index: number) => {
+    const isClosest = isClosestSubtask(subtask.id);
+    
     return (
       <motion.div
         key={subtask.id}
@@ -299,7 +312,7 @@ const Index = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: index * 0.1 }}
       >
-        <Card className="overflow-hidden rounded-3xl border border-gray-200 shadow-sm">
+        <Card className={`overflow-hidden rounded-3xl border ${isClosest ? 'border-green-500 shadow-md' : 'border-gray-200'} shadow-sm`}>
           <CardContent className="p-0">
             <div className="p-4">
               <div className="flex justify-between items-start mb-4">
@@ -328,11 +341,15 @@ const Index = () => {
               </div>
               
               <Button 
-                className="w-full h-12 text-lg font-semibold rounded-xl bg-green-400 hover:bg-green-500 text-black"
+                className={`w-full h-12 text-lg font-semibold rounded-xl ${isClosest ? 'bg-green-500 hover:bg-green-600' : 'bg-green-400 hover:bg-green-500'} text-black`}
                 onClick={() => completeSubtask(subtask.id)}
+                disabled={!isClosest}
               >
-                Start Collect
+                {isClosest ? 'Start Collect' : 'Not Next Task'}
               </Button>
+              {!isClosest && (
+                <p className="text-xs text-center mt-2 text-gray-500">Complete the closest task first</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -341,6 +358,8 @@ const Index = () => {
   };
   
   const renderPickupCard = (subtask: SubTask, parentTask: Task, index: number) => {
+    const isClosest = isClosestSubtask(subtask.id);
+    
     return (
       <motion.div
         key={subtask.id}
@@ -348,7 +367,7 @@ const Index = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: index * 0.1 }}
       >
-        <Card className="overflow-hidden rounded-3xl border border-gray-200 shadow-sm">
+        <Card className={`overflow-hidden rounded-3xl border ${isClosest ? 'border-sky-500 shadow-md' : 'border-gray-200'} shadow-sm`}>
           <CardContent className="p-0">
             <div className="p-4">
               <div className="flex justify-between items-start mb-4">
@@ -377,11 +396,15 @@ const Index = () => {
               </div>
               
               <Button 
-                className="w-full h-12 text-lg font-semibold rounded-xl bg-sky-400 hover:bg-sky-500 text-white"
+                className={`w-full h-12 text-lg font-semibold rounded-xl ${isClosest ? 'bg-sky-500 hover:bg-sky-600' : 'bg-sky-400 hover:bg-sky-500'} text-white`}
                 onClick={() => completeSubtask(subtask.id)}
+                disabled={!isClosest}
               >
-                Start Pickup
+                {isClosest ? 'Start Pickup' : 'Not Next Task'}
               </Button>
+              {!isClosest && (
+                <p className="text-xs text-center mt-2 text-gray-500">Complete the closest task first</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -435,6 +458,8 @@ const Index = () => {
               return renderPickupCard(subtask, parentTask, index);
             }
             
+            const isClosest = isClosestSubtask(subtask.id);
+            
             return (
               <motion.div
                 key={subtask.id}
@@ -442,7 +467,7 @@ const Index = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.1 }}
               >
-                <Card className="task-card-hover relative overflow-hidden">
+                <Card className={`task-card-hover relative overflow-hidden ${isClosest ? 'border-primary shadow-md' : ''}`}>
                   <div className={`absolute top-0 left-0 w-1 h-full ${getSubtaskColor(subtask.type)}`} />
                   
                   <CardHeader className="pb-2">
@@ -499,9 +524,13 @@ const Index = () => {
                       <Button 
                         className="w-full mt-2" 
                         onClick={() => completeSubtask(subtask.id)}
+                        disabled={!isClosest}
                       >
-                        Start {getSubtaskTypeName(subtask.type)}
+                        {isClosest ? `Start ${getSubtaskTypeName(subtask.type)}` : 'Not Next Task'}
                       </Button>
+                      {!isClosest && (
+                        <p className="text-xs text-center mt-1 text-gray-500">Complete the closest task first</p>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
