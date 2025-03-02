@@ -1,9 +1,13 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Scale, Copy } from 'lucide-react';
+import { ArrowLeft, Scale, Copy, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 
 const OrderDetailsPage = () => {
@@ -12,8 +16,10 @@ const OrderDetailsPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasRequestedEdit, setHasRequestedEdit] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [currentEditItem, setCurrentEditItem] = useState<{id: number, name: string, quantity: number, section: string} | null>(null);
   
-  const orderData = {
+  const [orderData, setOrderData] = useState({
     id: orderId || "1234P",
     estimatedWeight: "2.5",
     washAndFold: [
@@ -27,7 +33,7 @@ const OrderDetailsPage = () => {
       { id: 2, name: "Dress", quantity: 2 },
       { id: 3, name: "Jacket", quantity: 1 }
     ]
-  };
+  });
   
   const handleBack = () => {
     navigate(-1);
@@ -39,8 +45,42 @@ const OrderDetailsPage = () => {
   };
   
   const handleEditItem = (sectionId: string, itemId: number) => {
-    console.log(`Edit item ${itemId} in section ${sectionId}`);
-    toast.info(`Editing ${sectionId} item ${itemId}`);
+    const section = sectionId === 'washAndFold' ? orderData.washAndFold : orderData.dryCleaning;
+    const item = section.find(item => item.id === itemId);
+    
+    if (item) {
+      setCurrentEditItem({
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        section: sectionId
+      });
+      setIsEditModalOpen(true);
+    }
+  };
+  
+  const handleUpdateItem = () => {
+    if (!currentEditItem) return;
+    
+    setOrderData(prevData => {
+      const updatedData = {...prevData};
+      
+      if (currentEditItem.section === 'washAndFold') {
+        updatedData.washAndFold = updatedData.washAndFold.map(item => 
+          item.id === currentEditItem.id 
+            ? { ...item, name: currentEditItem.name, quantity: currentEditItem.quantity } 
+            : item
+        );
+      } else {
+        // We don't need to update dryCleaning since it's not editable
+      }
+      
+      return updatedData;
+    });
+    
+    setIsEditModalOpen(false);
+    setCurrentEditItem(null);
+    toast.success("Item updated successfully");
   };
   
   const handleAddItem = () => {
@@ -69,6 +109,28 @@ const OrderDetailsPage = () => {
       
       navigate(`/tasks/${taskId}`);
     }, 1500);
+  };
+  
+  const handleQuantityChange = (action: 'increase' | 'decrease') => {
+    if (!currentEditItem) return;
+    
+    setCurrentEditItem(prev => {
+      if (!prev) return prev;
+      
+      let newQuantity = prev.quantity;
+      if (action === 'increase') {
+        newQuantity += 1;
+      } else {
+        newQuantity = Math.max(1, newQuantity - 1);
+      }
+      
+      return { ...prev, quantity: newQuantity };
+    });
+  };
+  
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!currentEditItem) return;
+    setCurrentEditItem({ ...currentEditItem, name: e.target.value });
   };
   
   return (
@@ -188,6 +250,62 @@ const OrderDetailsPage = () => {
           </Button>
         </div>
       </div>
+      
+      {/* Edit Item Modal */}
+      <Sheet open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Edit Item</SheetTitle>
+          </SheetHeader>
+          
+          {currentEditItem && (
+            <div className="py-6 space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="itemName">Item Name</Label>
+                <Input 
+                  id="itemName" 
+                  value={currentEditItem.name} 
+                  onChange={handleNameChange}
+                  placeholder="Item name"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="quantity">Quantity</Label>
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={() => handleQuantityChange('decrease')}
+                    disabled={currentEditItem.quantity <= 1}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <div className="flex-1 text-center font-medium">
+                    {currentEditItem.quantity}
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={() => handleQuantityChange('increase')}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <SheetFooter className="mt-6">
+            <Button onClick={() => setIsEditModalOpen(false)} variant="outline">
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateItem}>
+              Save Changes
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 };
