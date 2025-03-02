@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Phone, AlertCircle, Clock, WashingMachine } from 'lucide-react';
@@ -7,7 +6,6 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Task, SubTask } from '@/types/task';
 
-// Mock data - in a real app this would come from an API or context
 const mockTasks: Record<string, Task> = {
   "task1": {
     id: "task1",
@@ -44,7 +42,6 @@ const mockTasks: Record<string, Task> = {
     ],
     status: "pending"
   },
-  // Additional mock tasks would be here
 };
 
 const TaskDetails = () => {
@@ -55,10 +52,8 @@ const TaskDetails = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, this would be an API call
     if (!taskId) return;
     
-    // Find the subtask and its parent task
     for (const [_, taskData] of Object.entries(mockTasks)) {
       const subtask = taskData.subtasks.find(st => st.id === taskId);
       if (subtask) {
@@ -76,16 +71,13 @@ const TaskDetails = () => {
   };
 
   const reportIssue = () => {
-    toast.error("Issue reported to support team", {
-      description: "A support agent will contact you shortly",
-    });
+    navigate(`/report-issue/${taskId}/${orderId}`);
   };
 
   const locationReached = () => {
     toast.success("Location reached!", {
       description: "Task marked as complete.",
     });
-    // Navigate to the success page instead of going home
     setTimeout(() => {
       navigate(`/task-success/${taskId}/${orderId}`);
     }, 1500);

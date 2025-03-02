@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,12 +12,11 @@ import Layout from "./components/layout/Layout";
 import TaskDetails from "./pages/TaskDetails";
 import TaskSuccessPage from "./pages/TaskSuccessPage";
 import OrderDetailsPage from "./pages/OrderDetailsPage";
+import ReportIssuePage from "./pages/ReportIssuePage";
 
-// Component to add invisible page number
 const PageNumber = () => {
   const location = useLocation();
   
-  // Map routes to page numbers
   const getPageNumber = () => {
     const routes = {
       "/": 1,
@@ -28,9 +26,9 @@ const PageNumber = () => {
       "/task": 5,
       "/task-success": 6,
       "/order-details": 7,
+      "/report-issue": 8,
     };
     
-    // Get the base route
     const baseRoute = "/" + location.pathname.split("/")[1];
     return routes[baseRoute] || 0;
   };
@@ -65,6 +63,7 @@ const AppRoutes = () => (
         <Route path="/task/:taskId/:orderId" element={<TaskDetails />} />
         <Route path="/task-success/:taskId/:orderId" element={<TaskSuccessPage />} />
         <Route path="/order-details/:taskId/:orderId" element={<OrderDetailsPage />} />
+        <Route path="/report-issue/:taskId/:orderId" element={<ReportIssuePage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
