@@ -40,7 +40,7 @@ const TaskSuccessPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-lg mx-auto">
-        {/* Header with back button */}
+        {/* Header with back button - same as TaskDetails page */}
         <div className="flex items-center mb-6">
           <Button variant="ghost" size="icon" onClick={handleBack} className="mr-2">
             <ArrowLeft className="h-5 w-5" />
@@ -48,8 +48,8 @@ const TaskSuccessPage = () => {
           <h1 className="text-xl font-semibold">Task Details</h1>
         </div>
         
-        {/* Task details section */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-4">
+        {/* Task details section - displayed as webpage style, not card */}
+        <div className="mb-4">
           <div className="flex justify-between items-center mb-4">
             <div className="text-xl font-bold">
               ID {taskData.id}
@@ -79,8 +79,8 @@ const TaskSuccessPage = () => {
           </div>
         </div>
         
-        {/* Contact information section */}
-        <div className="bg-white rounded-xl shadow-md p-6 mb-4">
+        {/* Contact information section - displayed as webpage style, not card */}
+        <div className="mb-4">
           <a 
             href={`https://maps.google.com/?q=${taskData.address}`} 
             target="_blank" 
