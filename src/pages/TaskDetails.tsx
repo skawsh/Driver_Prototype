@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Scale, Plus, Trash2, Copy, X } from 'lucide-react';
@@ -46,7 +45,7 @@ const TaskDetails = () => {
   }, [taskId, orderId]);
   
   const handleGoBack = () => {
-    navigate(-1);
+    navigate('/');
   };
   
   const handleRequestSackEdit = () => {
@@ -260,7 +259,6 @@ const TaskDetails = () => {
         </Button>
       </div>
 
-      {/* Edit Item Sheet */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent>
           <SheetHeader>
@@ -325,7 +323,6 @@ const TaskDetails = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Sack Edit Request Popup */}
       {isEditPopupOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 relative">
