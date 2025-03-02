@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Scale, Copy, Minus, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Scale, Copy, Minus, Plus, Trash2, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
@@ -202,6 +202,21 @@ const OrderDetailsPage = () => {
     }, 1500);
   };
   
+  const handleCompletePickup = () => {
+    setIsSaving(true);
+    
+    setTimeout(() => {
+      toast({
+        title: "Success",
+        description: "Pickup completed successfully",
+        duration: 5000,
+      });
+      setIsSaving(false);
+      
+      navigate(`/tasks/success/${taskId}`);
+    }, 1500);
+  };
+  
   const handleQuantityChange = (action: 'increase' | 'decrease', isNewItem: boolean = false) => {
     if (isNewItem) {
       setNewItem(prev => {
@@ -357,7 +372,7 @@ const OrderDetailsPage = () => {
           </div>
         </Card>
         
-        <div className="grid grid-cols-2 gap-4 mt-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-auto">
           <Button 
             variant="secondary" 
             className="bg-green-100 text-green-600 hover:bg-green-200"
@@ -371,6 +386,15 @@ const OrderDetailsPage = () => {
             disabled={isSaving}
           >
             {isSaving && !hasRequestedEdit ? "Saving..." : "Save changes"}
+          </Button>
+          <Button 
+            variant="default" 
+            className="bg-blue-500 text-white flex items-center gap-2 hover:bg-blue-600"
+            onClick={handleCompletePickup}
+            disabled={isSaving}
+          >
+            <CheckCircle className="h-5 w-5" />
+            Complete Pickup
           </Button>
         </div>
       </div>
