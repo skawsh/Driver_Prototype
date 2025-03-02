@@ -1,357 +1,176 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Scale, Plus, Trash2, Copy, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
-import { Card } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
 
-interface ClothingItem {
-  name: string;
-  quantity: number;
-}
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, MapPin, Phone, AlertCircle, Clock, WashingMachine } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { toast } from 'sonner';
+import { Task, SubTask } from '@/types/task';
+
+// Mock data - in a real app this would come from an API or context
+const mockTasks: Record<string, Task> = {
+  "task1": {
+    id: "task1",
+    orderNumber: "1234",
+    items: 3,
+    subtasks: [
+      {
+        id: "task1-pickup",
+        type: "pickup",
+        status: "pending",
+        enabled: true,
+        customerName: "Saiteja",
+        mobileNumber: "8197739892",
+        location: {
+          latitude: 17.4100,
+          longitude: 78.4600,
+          address: "320f, Deepa PG, Sector 21, Gurugram"
+        },
+        distance: 1.4
+      },
+      {
+        id: "task1-drop",
+        type: "drop",
+        status: "pending",
+        enabled: false,
+        customerName: "Raj Sharma",
+        mobileNumber: "+91 98765 43210",
+        location: {
+          latitude: 17.4100,
+          longitude: 78.5000,
+          address: "Laundry Studio, HITEC City, Hyderabad, Telangana 500081"
+        }
+      }
+    ],
+    status: "pending"
+  },
+  // Additional mock tasks would be here
+};
 
 const TaskDetails = () => {
+  const { taskId, orderId } = useParams<{ taskId: string; orderId: string }>();
   const navigate = useNavigate();
-  const { taskId, orderId } = useParams();
-  const [actualWeight, setActualWeight] = useState<string>('');
-  const [hasChanges, setHasChanges] = useState<boolean>(false);
-  const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
-  const [editingItem, setEditingItem] = useState<ClothingItem | null>(null);
-  const [newItemName, setNewItemName] = useState<string>('');
-  const [newItemQuantity, setNewItemQuantity] = useState<string>('1');
-  const [isEditPopupOpen, setIsEditPopupOpen] = useState<boolean>(false);
-  const [editOrderId, setEditOrderId] = useState<string>('');
-  
-  const estimatedWeight = 2.5;
-  const [washAndFoldItems, setWashAndFoldItems] = useState<ClothingItem[]>([
-    { name: 'Shirt', quantity: 1 },
-    { name: 'pant', quantity: 2 },
-    { name: 'Saree', quantity: 2 },
-    { name: 'T-Shirt', quantity: 3 }
-  ]);
-  
-  const [dryCleaningItems, setDryCleaningItems] = useState<ClothingItem[]>([
-    { name: 'Coat', quantity: 1 },
-    { name: 'Dress', quantity: 2 },
-    { name: 'Jacket', quantity: 1 }
-  ]);
+  const [task, setTask] = useState<SubTask | null>(null);
+  const [parentTask, setParentTask] = useState<Task | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log(`Loading task details for taskId: ${taskId}, orderId: ${orderId}`);
-  }, [taskId, orderId]);
-  
-  const handleGoBack = () => {
+    // In a real app, this would be an API call
+    if (!taskId) return;
+    
+    // Find the subtask and its parent task
+    for (const [_, taskData] of Object.entries(mockTasks)) {
+      const subtask = taskData.subtasks.find(st => st.id === taskId);
+      if (subtask) {
+        setTask(subtask);
+        setParentTask(taskData);
+        break;
+      }
+    }
+    
+    setLoading(false);
+  }, [taskId]);
+
+  const handleBack = () => {
     navigate('/');
   };
-  
-  const handleRequestSackEdit = () => {
-    setIsEditPopupOpen(true);
-    setEditOrderId(orderId || '');
-  };
-  
-  const handleCopyOrderId = () => {
-    if (orderId) {
-      navigator.clipboard.writeText(orderId);
-      toast.success("Order ID copied to clipboard");
-    }
-  };
-  
-  const handleSubmitSackEdit = () => {
-    if (!editOrderId.trim()) {
-      toast.error("Order ID is required");
-      return;
-    }
-    
-    toast.success("Sack edit request submitted", {
-      description: `Edit request sent for order ID: ${editOrderId}`,
+
+  const reportIssue = () => {
+    toast.error("Issue reported to support team", {
+      description: "A support agent will contact you shortly",
     });
-    setIsEditPopupOpen(false);
-  };
-  
-  const handleCloseEditPopup = () => {
-    setIsEditPopupOpen(false);
-  };
-  
-  const openAddItemSheet = () => {
-    setEditingItem(null);
-    setNewItemName('');
-    setNewItemQuantity('1');
-    setIsSheetOpen(true);
   };
 
-  const openEditItemSheet = (item: ClothingItem) => {
-    setEditingItem(item);
-    setNewItemName(item.name);
-    setNewItemQuantity(item.quantity.toString());
-    setIsSheetOpen(true);
+  const locationReached = () => {
+    toast.success("Location reached!", {
+      description: "Task marked as complete.",
+    });
+    // In a real app, this would update the task status via an API
+    setTimeout(() => {
+      navigate('/');
+    }, 1500);
   };
 
-  const handleSaveItem = () => {
-    if (!newItemName.trim()) {
-      toast.error("Item name is required");
-      return;
-    }
+  if (loading) {
+    return <div className="p-4">Loading...</div>;
+  }
 
-    const quantity = parseInt(newItemQuantity) || 1;
-    
-    if (editingItem) {
-      setWashAndFoldItems(prev => 
-        prev.map(item => 
-          item === editingItem ? { name: newItemName, quantity } : item
-        )
-      );
-      toast.success("Item updated successfully");
-    } else {
-      const newItem = { name: newItemName, quantity };
-      setWashAndFoldItems(prev => [...prev, newItem]);
-      toast.success("New item added successfully");
-    }
-
-    setIsSheetOpen(false);
-    setHasChanges(true);
-  };
-
-  const handleDeleteItem = (item: ClothingItem) => {
-    setWashAndFoldItems(prev => prev.filter(i => i !== item));
-    toast.success("Item removed successfully");
-    setHasChanges(true);
-  };
-
-  const handleAddItems = () => {
-    openAddItemSheet();
-  };
-
-  const handleSaveChanges = () => {
-    if (actualWeight || hasChanges) {
-      toast.success("Changes saved successfully", {
-        description: `Actual weight: ${actualWeight || "Not specified"} kg`,
-      });
-      setHasChanges(false);
-    } else {
-      toast.info("No changes to save", {
-        description: "Please make changes before saving",
-      });
-    }
-  };
-  
-  const handleWeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setActualWeight(e.target.value);
-    setHasChanges(true);
-  };
-  
-  const handleCloseSheet = () => {
-    setIsSheetOpen(false);
-  };
-  
-  return (
-    <div className="bg-blue-100 min-h-screen p-4 flex flex-col">
-      <div className="flex items-center mb-4">
-        <Button 
-          variant="ghost" 
-          className="p-0 h-auto mr-2" 
-          onClick={handleGoBack}
-          aria-label="Go back"
-        >
-          <ArrowLeft className="h-6 w-6 text-black" />
-        </Button>
-        <div className="text-lg font-bold flex items-center">
-          ID {orderId || '123456'}P
-          <Button
-            variant="ghost"
-            size="icon"
-            className="ml-2 h-8 w-8 p-0"
-            onClick={handleCopyOrderId}
-            aria-label="Copy Order ID"
-          >
-            <Copy className="h-4 w-4" />
+  if (!task || !parentTask) {
+    return (
+      <div className="p-4">
+        <div className="flex items-center mb-4">
+          <Button variant="ghost" size="icon" onClick={handleBack}>
+            <ArrowLeft className="h-5 w-5" />
           </Button>
+          <h1 className="text-lg font-semibold ml-2">Task not found</h1>
         </div>
+        <p>The requested task could not be found.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto max-w-md p-4">
+      <div className="flex items-center mb-4">
+        <Button variant="ghost" size="icon" onClick={handleBack}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-lg font-semibold ml-2">Task Details</h1>
       </div>
       
-      <div className="bg-white rounded-lg p-4 flex-1 shadow-md">
-        <div className="flex items-center justify-center mb-2">
-          <Scale className="h-5 w-5 mr-2" />
-          <h2 className="text-lg font-semibold">Weight details</h2>
-        </div>
-        
-        <div className="grid grid-cols-3 gap-2 mb-4">
-          <div className="col-span-2 text-left">Estimated weight</div>
-          <div className="text-right">{estimatedWeight} Kg</div>
-          
-          <div className="col-span-2 text-left">Actual weight</div>
-          <div className="flex justify-end">
-            <Input 
-              type="number" 
-              className="w-20 h-8 text-right p-1 border-b-2 border-t-0 border-x-0 rounded-none focus:ring-0" 
-              placeholder="___"
-              value={actualWeight}
-              onChange={handleWeightChange}
-            />
-            <span className="ml-1">Kg</span>
-          </div>
-        </div>
-        
-        <h3 className="font-semibold mb-2">Add Clothing items</h3>
-        <h4 className="font-bold text-center mb-2">Wash & Fold</h4>
-        
-        <ul className="mb-4">
-          {washAndFoldItems.map((item, index) => (
-            <li key={`wash-${index}`} className="grid grid-cols-6 mb-1 items-center">
-              <div className="col-span-1">{index + 1}.</div>
-              <div className="col-span-3 text-left">{item.name}</div>
-              <div className="col-span-1">X {item.quantity}</div>
-              <div className="col-span-1 flex justify-end">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-6 w-6 p-0" 
-                  onClick={() => openEditItemSheet(item)}
-                >
-                  <span className="text-xs">Edit</span>
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
-        
-        <button 
-          onClick={handleAddItems}
-          className="text-left text-blue-600 font-semibold mb-4 flex items-center"
-        >
-          Add or edit items (+)
-        </button>
-        
-        <Separator className="my-4" />
-        
-        <h4 className="font-bold text-center mb-2">Dry cleaning</h4>
-        <ul className="mb-4">
-          {dryCleaningItems.map((item, index) => (
-            <li key={`dry-${index}`} className="grid grid-cols-6 mb-1 items-center">
-              <div className="col-span-1">{index + 1}.</div>
-              <div className="col-span-3 text-left">{item.name}</div>
-              <div className="col-span-2 text-center">X {item.quantity}</div>
-            </li>
-          ))}
-        </ul>
-        
-        <div className="mt-2 text-sm text-gray-500 text-center italic">
-          Other clothing items can only be modified by user
-        </div>
-      </div>
-      
-      <div className="mt-4 flex justify-center gap-4">
-        <Button 
-          className="bg-green-300 text-black font-semibold rounded-md px-8 py-2 hover:bg-green-400"
-          onClick={handleRequestSackEdit}
-        >
-          Request sack edit
-        </Button>
-        
-        <Button 
-          className="bg-blue-500 text-white font-semibold rounded-md px-8 py-2 hover:bg-blue-600"
-          onClick={handleSaveChanges}
-        >
-          Save changes
-        </Button>
-      </div>
-
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>{editingItem ? 'Edit Item' : 'Add New Item'}</SheetTitle>
-          </SheetHeader>
-          <div className="py-6">
-            <Card className="p-4">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="itemName">Item Name</Label>
-                  <Input
-                    id="itemName"
-                    placeholder="Enter item name"
-                    value={newItemName}
-                    onChange={(e) => setNewItemName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="itemQuantity">Quantity</Label>
-                  <Input
-                    id="itemQuantity"
-                    type="number"
-                    min="1"
-                    value={newItemQuantity}
-                    onChange={(e) => setNewItemQuantity(e.target.value)}
-                  />
-                </div>
-                <div className="flex justify-between gap-2">
-                  {editingItem && (
-                    <Button 
-                      variant="destructive" 
-                      onClick={() => {
-                        handleDeleteItem(editingItem);
-                        setIsSheetOpen(false);
-                      }}
-                    >
-                      <Trash2 className="mr-2" />
-                      Delete
-                    </Button>
-                  )}
-                  <Button 
-                    className={`${!editingItem ? 'w-full' : ''} bg-blue-500 hover:bg-blue-600`}
-                    onClick={handleSaveItem}
-                  >
-                    <Plus className="mr-2" />
-                    {editingItem ? 'Update' : 'Add'} Item
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
-          <SheetFooter className="pt-2">
-            <Button 
-              variant="outline" 
-              onClick={handleCloseSheet}
-              className="w-full"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-
-      {isEditPopupOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 relative">
-            <button 
-              onClick={handleCloseEditPopup}
-              className="absolute top-2 right-2"
-              aria-label="Close popup"
-            >
-              <X className="h-6 w-6" />
-            </button>
-            
-            <div className="mt-4 mb-6">
-              <Input
-                placeholder="Enter the order ID"
-                value={editOrderId}
-                onChange={(e) => setEditOrderId(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-2 w-full mb-4"
-              />
-              
-              <Button 
-                onClick={handleSubmitSackEdit}
-                className="w-full bg-green-400 hover:bg-green-500 text-black font-semibold py-2"
-              >
-                Request edit
-              </Button>
+      <Card className="overflow-hidden rounded-3xl border-2 border-primary shadow-lg mb-4">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-xl font-bold">
+              ID {orderId}P
+            </div>
+            <div className="flex items-center">
+              <MapPin className="h-4 w-4 text-blue-500 mr-1" />
+              <span className="text-blue-500 font-medium">{task.distance} Km</span>
+              <Clock className="h-5 w-5 text-gray-400 ml-3" />
             </div>
           </div>
+          
+          <div className="flex items-center mb-5">
+            <WashingMachine className="h-6 w-6 mr-2" />
+            <span className="text-2xl font-bold">{task.customerName}</span>
+          </div>
+          
+          <a 
+            href={`https://maps.google.com/?q=${task.location.latitude},${task.location.longitude}`} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-start space-x-2 mb-4 text-blue-500 hover:underline"
+          >
+            <MapPin className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
+            <span className="break-all">{task.location.address}</span>
+          </a>
+          
+          <a 
+            href={`tel:${task.mobileNumber}`}
+            className="flex items-start space-x-2 mb-6 text-blue-500 hover:underline"
+          >
+            <Phone className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
+            <span>{task.mobileNumber}</span>
+          </a>
+          
+          <Button 
+            variant="destructive"
+            className="mb-4 w-full"
+            onClick={reportIssue}
+          >
+            <AlertCircle className="mr-2 h-4 w-4" />
+            Report issue
+          </Button>
+          
+          <Button 
+            className="w-full h-12 text-lg font-semibold bg-blue-500 hover:bg-blue-600 rounded-full"
+            onClick={locationReached}
+          >
+            Location reached
+          </Button>
         </div>
-      )}
+      </Card>
     </div>
   );
 };
