@@ -38,7 +38,14 @@ export const calculateDistance = (location1: Location, location2: Location): num
 
 // Sort subtasks by distance from current location
 export const sortSubtasksByDistance = (subtasks: SubTask[], currentLocation: Location) => {
-  return [...subtasks].sort((a, b) => {
+  // Calculate distances for each subtask
+  const subtasksWithDistance = subtasks.map(subtask => ({
+    ...subtask,
+    distance: calculateDistance(currentLocation, subtask.location)
+  }));
+  
+  // Sort by distance
+  return [...subtasksWithDistance].sort((a, b) => {
     if (a.distance === undefined) return 1;
     if (b.distance === undefined) return -1;
     return a.distance - b.distance;

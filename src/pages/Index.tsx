@@ -196,9 +196,10 @@ const Index = () => {
     tasks.forEach(task => {
       task.subtasks.forEach(subtask => {
         if (subtask.enabled && subtask.status !== 'completed') {
+          const distance = calculateDistance(driverState.currentLocation, subtask.location);
           activeSubtasks.push({
             ...subtask,
-            distance: calculateDistance(driverState.currentLocation, subtask.location)
+            distance: distance
           });
         }
       });
@@ -214,7 +215,7 @@ const Index = () => {
     if (closestSubtask && activeSubtasks.length > 0) {
       setActiveTaskId(closestSubtask.id);
     }
-  }, []);
+  }, [activeSubtasks.length]);
   
   const completeSubtask = (subtaskId: string) => {
     const updatedTasks = [...tasks];
@@ -254,6 +255,10 @@ const Index = () => {
         ...driverState,
         currentLocation: newLocation
       });
+      
+      setTimeout(() => {
+        setTasks(prevTasks => [...prevTasks]);
+      }, 100);
     }
     
     toast.success(`Subtask completed successfully!`, {
@@ -329,7 +334,7 @@ const Index = () => {
                 </div>
                 <div className="flex items-center text-sky-400 font-medium">
                   <Route className="h-4 w-4 mr-1" />
-                  {subtask.distance} km
+                  {subtask.distance !== undefined ? subtask.distance : 0} km
                 </div>
               </div>
               
@@ -384,7 +389,7 @@ const Index = () => {
                 </div>
                 <div className="flex items-center text-sky-400 font-medium">
                   <Route className="h-4 w-4 mr-1" />
-                  {subtask.distance} km
+                  {subtask.distance !== undefined ? subtask.distance : 0} km
                 </div>
               </div>
               
@@ -524,7 +529,7 @@ const Index = () => {
                         <div className="flex items-center space-x-2">
                           <Clock className="h-4 w-4 text-muted-foreground" />
                           <span className="font-medium text-primary">
-                            {subtask.distance} km
+                            {subtask.distance !== undefined ? subtask.distance : 0} km
                           </span>
                         </div>
                       </div>
