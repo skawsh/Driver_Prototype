@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type IssueOption = {
@@ -33,15 +33,26 @@ const issueOptions: IssueOption[] = [
     value: 'wrong_address',
     label: 'Wrong Address Provided',
     description: 'The address given does not exist or leads to a different place.'
+  },
+  {
+    value: 'custom',
+    label: 'Custom Issue',
+    description: 'Describe the issue you are facing in the additional details section.'
   }
 ];
 
 const ReportIssuePage = () => {
   const { taskId, orderId } = useParams<{ taskId: string; orderId: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [selectedIssue, setSelectedIssue] = useState<string>('');
   const [additionalDetails, setAdditionalDetails] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCustom, setIsCustom] = useState(false);
+
+  useEffect(() => {
+    setIsCustom(selectedIssue === 'custom');
+  }, [selectedIssue]);
 
   const handleBack = () => {
     navigate(-1);
@@ -57,7 +68,20 @@ const ReportIssuePage = () => {
 
   const handleSubmit = () => {
     if (!selectedIssue) {
-      toast.error('Please select an issue type');
+      toast({
+        title: "Error",
+        description: "Please select an issue type",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isCustom && !additionalDetails.trim()) {
+      toast({
+        title: "Error",
+        description: "Please provide details for the custom issue",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -67,17 +91,18 @@ const ReportIssuePage = () => {
     setTimeout(() => {
       const selectedOption = issueOptions.find(option => option.value === selectedIssue);
       
-      toast.success('Issue reported successfully', {
-        description: `The order has been rescheduled and will appear in the admin panel.`,
+      toast({
+        title: "Success",
+        description: "Issue reported successfully. The order has been rescheduled.",
         duration: 5000,
       });
       
       setIsSubmitting(false);
       
-      // Navigate back to home screen instead of task details
+      // Navigate to home screen after 5 seconds
       setTimeout(() => {
-        navigate('/'); // Navigate to home page instead of back to task
-      }, 1500);
+        navigate('/'); // Navigate to home page
+      }, 5000);
     }, 1000);
   };
 
@@ -124,20 +149,24 @@ const ReportIssuePage = () => {
             
             <div>
               <label className="block text-sm font-medium mb-2">
-                Additional Details
+                Additional Details {isCustom && <span className="text-red-500">*</span>}
               </label>
               <Textarea 
                 value={additionalDetails}
                 onChange={handleDetailsChange}
-                placeholder="Please provide any additional details that might help our support team..."
-                className="min-h-[120px] border-green-200 border-2 rounded-md"
+                placeholder={isCustom ? "Please describe the issue you're facing..." : "Please provide any additional details that might help our support team..."}
+                className={`min-h-[120px] ${isCustom ? 'border-red-300 border-2' : 'border-green-200 border-2'} rounded-md`}
+                required={isCustom}
               />
+              {isCustom && !additionalDetails.trim() && (
+                <p className="text-sm text-red-500 mt-1">Required for custom issues</p>
+              )}
             </div>
             
             <Button 
               className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-md flex items-center justify-center gap-2"
               onClick={handleSubmit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || (isCustom && !additionalDetails.trim())}
             >
               <AlertTriangle className="h-5 w-5" />
               {isSubmitting ? 'Submitting...' : 'Report Issue'}
