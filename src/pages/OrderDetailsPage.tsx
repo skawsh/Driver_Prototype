@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Scale, Copy, Minus, Plus, Trash2, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Scale, Copy, Minus, Plus, Trash2, CheckCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Card } from '@/components/ui/card';
@@ -18,10 +19,12 @@ const OrderDetailsPage = () => {
   const [hasRequestedEdit, setHasRequestedEdit] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isRequestEditModalOpen, setIsRequestEditModalOpen] = useState(false);
   const [currentEditItem, setCurrentEditItem] = useState<{id: number, name: string, quantity: number, section: string} | null>(null);
   const [newItem, setNewItem] = useState<{name: string, quantity: number}>({name: '', quantity: 1});
   const [actualWeight, setActualWeight] = useState<string>('');
   const [hasChanges, setHasChanges] = useState(false);
+  const [requestOrderId, setRequestOrderId] = useState('');
   
   const [orderData, setOrderData] = useState({
     id: orderId || "1234P",
@@ -166,7 +169,12 @@ const OrderDetailsPage = () => {
   };
   
   const handleRequestSackEdit = () => {
+    setIsRequestEditModalOpen(true);
+  };
+  
+  const handleSubmitSackEditRequest = () => {
     setIsSaving(true);
+    setIsRequestEditModalOpen(false);
     
     setTimeout(() => {
       setHasRequestedEdit(true);
@@ -178,6 +186,11 @@ const OrderDetailsPage = () => {
         duration: 3000,
       });
     }, 1000);
+  };
+  
+  const handleCloseRequestModal = () => {
+    setIsRequestEditModalOpen(false);
+    setRequestOrderId('');
   };
   
   const handleSaveChanges = () => {
@@ -396,6 +409,40 @@ const OrderDetailsPage = () => {
             <CheckCircle className="h-5 w-5" />
             Complete Pickup
           </Button>
+        </div>
+      </div>
+      
+      {/* Request Edit Modal */}
+      <div className={`fixed inset-0 bg-black/50 flex items-center justify-center z-50 ${isRequestEditModalOpen ? 'block' : 'hidden'}`}>
+        <div className="bg-white rounded-lg w-full max-w-md mx-4 overflow-hidden relative">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="absolute right-2 top-2"
+            onClick={handleCloseRequestModal}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+          
+          <div className="p-6">
+            <div className="mb-4">
+              <Label htmlFor="orderIdInput">Enter the order ID</Label>
+              <Input 
+                id="orderIdInput"
+                value={requestOrderId}
+                onChange={(e) => setRequestOrderId(e.target.value)}
+                className="mt-2"
+                placeholder="Order ID"
+              />
+            </div>
+            
+            <Button 
+              className="w-full bg-green-400 hover:bg-green-500 text-black"
+              onClick={handleSubmitSackEditRequest}
+            >
+              Request edit
+            </Button>
+          </div>
         </div>
       </div>
       
