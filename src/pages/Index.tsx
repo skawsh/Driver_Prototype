@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -469,6 +470,7 @@ const Index = () => {
     
     if (!parentTask) return null;
     
+    // Updated to match the card style of task listings for consistency
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -479,11 +481,8 @@ const Index = () => {
           <CardContent className="p-0">
             <div className="p-4">
               <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center">
-                  <div className="text-lg font-semibold mr-2">
-                    ID {parentTask.orderNumber}P
-                  </div>
-                  <MapPin className="h-4 w-4 text-sky-400" />
+                <div className="text-lg font-semibold">
+                  ID {parentTask.orderNumber}P
                 </div>
                 <Button
                   variant="ghost"
@@ -495,22 +494,21 @@ const Index = () => {
                 </Button>
               </div>
               
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <WashingMachine className="h-5 w-5 mr-2" />
-                  <span className="text-xl font-bold">{inProgressTask.customerName}</span>
+              <div className="flex items-center mb-4">
+                <WashingMachine className="h-5 w-5 mr-2" />
+                <span className="text-xl font-bold">{inProgressTask.customerName}</span>
+              </div>
+              
+              <div className="flex items-end justify-end mb-3">
+                <div className="flex items-center text-sky-400 font-medium">
+                  <Route className="h-4 w-4 mr-1" />
+                  {inProgressTask.distance !== undefined ? inProgressTask.distance : 0} Km
                 </div>
-                <div className="flex items-center">
-                  <Clock 
-                    className="h-5 w-5 clock-icon mr-3" 
-                    onClick={() => snoozeTask(inProgressTask.id)}
-                    aria-label="Snooze this task for 30 minutes"
-                  />
-                  <div className="flex items-center text-sky-400 font-medium">
-                    <Route className="h-4 w-4 mr-1" />
-                    {inProgressTask.distance !== undefined ? inProgressTask.distance : 0} Km
-                  </div>
-                </div>
+                <Clock 
+                  className="h-5 w-5 clock-icon ml-3 cursor-pointer" 
+                  onClick={() => snoozeTask(inProgressTask.id)}
+                  aria-label="Snooze this task for 30 minutes"
+                />
               </div>
               
               <a 
@@ -533,7 +531,15 @@ const Index = () => {
                 </a>
               )}
               
-              <div className="grid grid-cols-1 gap-3 mt-4">
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <Button 
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() => viewDetails(inProgressTask)}
+                >
+                  View details
+                </Button>
+                
                 <Button 
                   variant="destructive"
                   className="rounded-xl"
@@ -543,7 +549,7 @@ const Index = () => {
                 </Button>
                 
                 <Button 
-                  className="location-reached-button w-full h-12 text-lg font-semibold"
+                  className="location-reached-button w-full h-12 text-lg font-semibold col-span-2"
                   onClick={locationReached}
                 >
                   Location reached
