@@ -42,7 +42,8 @@ const mockTasks: Record<string, Task> = {
         }
       }
     ],
-    status: "pending"
+    status: "pending",
+    washType: "express" // Added the required washType property
   },
 };
 
