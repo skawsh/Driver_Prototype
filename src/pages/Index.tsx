@@ -199,7 +199,7 @@ const Index = () => {
   const [inProgressTask, setInProgressTask] = useState<SubTask | null>(null);
   const [locationReachedTask, setLocationReachedTask] = useState<SubTask | null>(null);
   const [snoozedTasks, setSnoozedTasks] = useState<string[]>([]);
-  const [selectedWashType, setSelectedWashType] = useState<'all' | 'express' | 'standard'>('all');
+  const [selectedWashType, setSelectedWashType] = useState<'express' | 'standard'>('express');
   
   const getActiveSubtasks = () => {
     const activeSubtasks: SubTask[] = [];
@@ -229,15 +229,13 @@ const Index = () => {
   }, [activeSubtasks.length, inProgressTask]);
   
   // Filter tasks based on selected wash type
-  const filteredTasks = selectedWashType === 'all' 
-    ? tasks 
-    : tasks.filter(task => {
-        if (selectedWashType === 'express') {
-          return task.washType === 'express' || task.washType === 'both';
-        } else {
-          return task.washType === 'standard';
-        }
-      });
+  const filteredTasks = tasks.filter(task => {
+    if (selectedWashType === 'express') {
+      return task.washType === 'express' || task.washType === 'both';
+    } else {
+      return task.washType === 'standard';
+    }
+  });
   
   const expressOrders = tasks.filter(task => task.washType === 'express' || task.washType === 'both');
   const standardOrders = tasks.filter(task => task.washType === 'standard');
@@ -936,15 +934,8 @@ const Index = () => {
         </Card>
       ) : (
         <div className="space-y-8">
-          {/* Filter buttons */}
+          {/* Filter buttons - showing only Express and Standard options */}
           <div className="flex flex-wrap gap-3 mb-2">
-            <Button 
-              variant={selectedWashType === 'all' ? "default" : "outline"}
-              onClick={() => setSelectedWashType('all')}
-              className="rounded-full"
-            >
-              All Orders
-            </Button>
             <Button 
               variant={selectedWashType === 'express' ? "default" : "outline"}
               onClick={() => setSelectedWashType('express')}
@@ -963,42 +954,8 @@ const Index = () => {
             </Button>
           </div>
           
-          {/* Side by side cards if showing all orders */}
-          {selectedWashType === 'all' ? (
-            renderSideBySideOrders()
-          ) : (
-            <div className="space-y-4">
-              {selectedWashType === 'express' ? (
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Zap className="h-5 w-5 text-amber-500" />
-                    <h2 className="text-xl font-semibold">Express Orders ({expressSubtasks.length})</h2>
-                  </div>
-                  <div className="grid grid-cols-1 gap-4">
-                    {expressSubtasks.map((subtask, index) => {
-                      const parentTask = tasks.find(task => task.subtasks.some(st => st.id === subtask.id));
-                      if (!parentTask) return null;
-                      return renderTaskCard(subtask, parentTask, index);
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Timer className="h-5 w-5 text-blue-500" />
-                    <h2 className="text-xl font-semibold">Standard Orders ({standardSubtasks.length})</h2>
-                  </div>
-                  <div className="grid grid-cols-1 gap-4">
-                    {standardSubtasks.map((subtask, index) => {
-                      const parentTask = tasks.find(task => task.subtasks.some(st => st.id === subtask.id));
-                      if (!parentTask) return null;
-                      return renderTaskCard(subtask, parentTask, index);
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Always show side by side cards since there's no "all" option anymore */}
+          {renderSideBySideOrders()}
         </div>
       )}
       
