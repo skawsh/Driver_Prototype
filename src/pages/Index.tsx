@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -210,6 +211,7 @@ const Index = () => {
     return sortSubtasksByDistance(activeSubtasks, driverState.currentLocation);
   };
   
+  // Recalculate active subtasks whenever driver location or tasks change
   const activeSubtasks = getActiveSubtasks();
   
   // Complete a subtask and update the workflow

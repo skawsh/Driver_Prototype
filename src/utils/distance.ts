@@ -1,5 +1,5 @@
 
-import { Location } from "../types/task";
+import { Location, SubTask } from "../types/task";
 
 // This is a simplified distance calculation
 // In a real app, we would use a proper geodesic calculation or mapping API
@@ -14,7 +14,7 @@ export const calculateDistance = (location1: Location, location2: Location): num
 };
 
 // Sort subtasks by distance from current location
-export const sortSubtasksByDistance = (subtasks: any[], currentLocation: Location) => {
+export const sortSubtasksByDistance = (subtasks: SubTask[], currentLocation: Location) => {
   return [...subtasks].sort((a, b) => {
     if (a.distance === undefined) return 1;
     if (b.distance === undefined) return -1;
